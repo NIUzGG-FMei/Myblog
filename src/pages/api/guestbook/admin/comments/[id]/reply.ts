@@ -4,8 +4,10 @@ import {
 	authenticateAdmin,
 	jsonResponse,
 } from "@/utils/guestbook/guestbook-server";
-import { moderateContent } from "@/utils/guestbook/guestbook-validation";
-import { normalizePlainText } from "@/utils/guestbook/guestbook-validation";
+import {
+	moderateContent,
+	normalizePlainText,
+} from "@/utils/guestbook/guestbook-validation";
 
 export const prerender = false;
 
@@ -22,7 +24,9 @@ export const POST: APIRoute = async ({ params, request }) => {
 	} catch {
 		return jsonResponse({ message: "请求内容格式不正确" }, 400);
 	}
-	const content = normalizePlainText((rawBody as { content?: unknown })?.content);
+	const content = normalizePlainText(
+		(rawBody as { content?: unknown })?.content,
+	);
 	if (content.length < 2 || content.length > 500) {
 		return jsonResponse({ message: "回复内容需为 2 至 500 个字符" }, 422);
 	}

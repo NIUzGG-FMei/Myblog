@@ -24,8 +24,9 @@ type ValidationResult =
 	| { ok: true; data: GuestbookSubmission }
 	| { ok: false; message: string };
 
-	const urlPattern = /(?:https?:\/\/|www\.|[a-z0-9-]+\.(?:com|cn|net|org|top|xyz)\b)/iu;
-	const htmlPattern = /<\/?[a-z][^>]*>/iu;
+const urlPattern =
+	/(?:https?:\/\/|www\.|[a-z0-9-]+\.(?:com|cn|net|org|top|xyz)\b)/iu;
+const htmlPattern = /<\/?[a-z][^>]*>/iu;
 
 const severeTerms = [
 	"儿童色情",
@@ -55,12 +56,15 @@ const reviewTerms = [
 
 export function normalizePlainText(value: unknown): string {
 	if (typeof value !== "string") return "";
-	return value
-		.normalize("NFKC")
-		.replace(/\r\n?/gu, "\n")
-		.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/gu, "")
-		.replace(/[\u200B-\u200D\u2060\uFEFF]/gu, "")
-		.trim();
+	return (
+		value
+			.normalize("NFKC")
+			.replace(/\r\n?/gu, "\n")
+			// biome-ignore lint/suspicious/noControlCharactersInRegex: 移除 C0 控制字符防止注入，见 https://www.w3.org/TR/xml/#charsets
+			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/gu, "")
+			.replace(/[\u200B-\u200D\u2060\uFEFF]/gu, "")
+			.trim()
+	);
 }
 
 function characterLength(value: string): number {
@@ -81,7 +85,11 @@ export function validateSubmission(
 	}
 
 	const startedAt = Number(body.formStartedAt);
-	if (!Number.isFinite(startedAt) || now - startedAt < 3000 || now - startedAt > 7_200_000) {
+	if (
+		!Number.isFinite(startedAt) ||
+		now - startedAt < 3000 ||
+		now - startedAt > 7_200_000
+	) {
 		return { ok: false, message: "请稍后重新填写并提交" };
 	}
 
@@ -96,7 +104,10 @@ export function validateSubmission(
 
 	const anonymous = body.anonymous !== false;
 	const displayName = anonymous ? "匿名" : normalizePlainText(body.displayName);
-	if (!anonymous && (characterLength(displayName) < 1 || characterLength(displayName) > 24)) {
+	if (
+		!anonymous &&
+		(characterLength(displayName) < 1 || characterLength(displayName) > 24)
+	) {
 		return { ok: false, message: "个人称呼需为 1 至 24 个字符" };
 	}
 

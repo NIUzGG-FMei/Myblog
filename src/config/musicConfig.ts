@@ -1,17 +1,7 @@
 import type { MusicPlayerConfig } from "../types/musicConfig";
-import { getPublicEnv } from "../utils/env-utils";
 
-const remoteMusicBaseUrl = getPublicEnv("PUBLIC_MUSIC_BASE_URL").replace(
-	/\/$/,
-	"",
-);
 // meting 模式使用在线 API（网易云歌单），无需本地音乐文件，始终显示播放器
 const hasMusicSource = true;
-
-const musicUrl = (fileName: string) =>
-	remoteMusicBaseUrl
-		? `${remoteMusicBaseUrl}/${encodeURIComponent(fileName)}`
-		: `/assets/music/${fileName}`;
 
 // 音乐播放器配置
 export const musicPlayerConfig: MusicPlayerConfig = {
@@ -59,51 +49,6 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	// 2. 或者直接填入歌词字符串内容
 	// lrc: "[00:00.00]歌词内容...",
 	local: {
-		playlist: hasMusicSource
-			? [
-					{
-						name: "best behaviour",
-						artist: "home alone",
-						url: musicUrl("home alone. - best behaviour.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-					{
-						name: "Germinate",
-						artist: "K. C. Roller",
-						url: musicUrl("K. C. Roller - Germinate.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-					{
-						name: "Kids",
-						artist: "MGMT",
-						url: musicUrl("MGMT - Kids.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-					{
-						name: "Early to Bed",
-						artist: "Morphine",
-						url: musicUrl("Morphine - Early to Bed.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-					{
-						name: "Goodnight Moon",
-						artist: "Boogie Belgique",
-						url: musicUrl("Boogie Belgique - Goodnight Moon.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-					{
-						name: "São Paulo",
-						artist: "Fyex",
-						url: musicUrl("Fyex - São Paulo.flac"),
-						cover: "/assets/music/cover/奶龙.png",
-						lrc: "",
-					},
-				]
-			: [],
+		playlist: [],
 	},
 };

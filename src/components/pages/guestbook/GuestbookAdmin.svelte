@@ -2,7 +2,10 @@
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
 import CommentAdmin from "@/components/pages/guestbook/CommentAdmin.svelte";
-import type { GuestbookAdminNote, GuestbookNoteStatus } from "@/types/guestbook";
+import type {
+	GuestbookAdminNote,
+	GuestbookNoteStatus,
+} from "@/types/guestbook";
 
 const statuses: Array<{ value: GuestbookNoteStatus; label: string }> = [
 	{ value: "pending", label: "待审核" },
@@ -80,12 +83,19 @@ async function loadNotes(append = false): Promise<void> {
 	try {
 		const params = new URLSearchParams({ status: activeStatus });
 		if (append && nextCursor) params.set("cursor", nextCursor);
-		const response = await fetch(`/api/guestbook/admin/notes/?${params.toString()}`, {
-			headers: { Accept: "application/json" },
-		});
-		const data = (await response.json()) as { notes?: GuestbookAdminNote[]; nextCursor?: string | null; message?: string };
+		const response = await fetch(
+			`/api/guestbook/admin/notes/?${params.toString()}`,
+			{
+				headers: { Accept: "application/json" },
+			},
+		);
+		const data = (await response.json()) as {
+			notes?: GuestbookAdminNote[];
+			nextCursor?: string | null;
+			message?: string;
+		};
 		if (!response.ok) throw new Error(data.message || "审核队列加载失败");
-		notes = append ? [...notes, ...(data.notes || [])] : (data.notes || []);
+		notes = append ? [...notes, ...(data.notes || [])] : data.notes || [];
 		nextCursor = data.nextCursor || null;
 	} catch (error) {
 		errorMessage = error instanceof Error ? error.message : "审核队列加载失败";
@@ -99,8 +109,14 @@ async function revealContact(note: GuestbookAdminNote): Promise<void> {
 	if (!note.privateContactAvailable || contactById[note.id]) return;
 	contactById = { ...contactById, [note.id]: "loading" };
 	try {
-		const response = await fetch(`/api/guestbook/admin/notes/${note.id}/contact/`, { headers: { Accept: "application/json" } });
-		const data = (await response.json()) as { contact?: string; message?: string };
+		const response = await fetch(
+			`/api/guestbook/admin/notes/${note.id}/contact/`,
+			{ headers: { Accept: "application/json" } },
+		);
+		const data = (await response.json()) as {
+			contact?: string;
+			message?: string;
+		};
 		if (!response.ok) throw new Error(data.message || "无法读取联系方式");
 		contactById = { ...contactById, [note.id]: data.contact || "none" };
 	} catch {
@@ -108,7 +124,10 @@ async function revealContact(note: GuestbookAdminNote): Promise<void> {
 	}
 }
 
-async function moderate(note: GuestbookAdminNote, status: "published" | "rejected"): Promise<void> {
+async function moderate(
+	note: GuestbookAdminNote,
+	status: "published" | "rejected",
+): Promise<void> {
 	const response = await fetch(`/api/guestbook/admin/notes/${note.id}/`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
@@ -123,8 +142,11 @@ async function moderate(note: GuestbookAdminNote, status: "published" | "rejecte
 }
 
 async function deleteNote(note: GuestbookAdminNote): Promise<void> {
-	if (!window.confirm("确定删除这张便签吗？删除后私密联系方式也会清除。")) return;
-	const response = await fetch(`/api/guestbook/admin/notes/${note.id}/`, { method: "DELETE" });
+	if (!window.confirm("确定删除这张便签吗？删除后私密联系方式也会清除。"))
+		return;
+	const response = await fetch(`/api/guestbook/admin/notes/${note.id}/`, {
+		method: "DELETE",
+	});
 	if (!response.ok) {
 		errorMessage = "删除便签失败";
 		return;

@@ -166,10 +166,7 @@ export const POST: APIRoute = async ({ request }) => {
 			).bind(ipHash, contentHash, moderation.status, now),
 		];
 
-		if (
-			moderation.status !== "rejected" &&
-			(validation.data.contact)
-		) {
+		if (moderation.status !== "rejected" && validation.data.contact) {
 			if (!env.CONTACT_ENCRYPTION_KEY) {
 				return jsonResponse({ message: "私密联系方式服务尚未配置" }, 503);
 			}

@@ -12,7 +12,10 @@ let statusFilter = $state<"all" | "published" | "deleted">("published");
 let replyForId = $state<string | null>(null);
 let replyContent = $state("");
 
-const statusOptions: Array<{ value: "all" | "published" | "deleted"; label: string }> = [
+const statusOptions: Array<{
+	value: "all" | "published" | "deleted";
+	label: string;
+}> = [
 	{ value: "published", label: "已发布" },
 	{ value: "deleted", label: "已删除" },
 	{ value: "all", label: "全部" },
@@ -36,9 +39,12 @@ async function loadComments(): Promise<void> {
 		const query = new URLSearchParams();
 		if (activePathFilter) query.set("path", activePathFilter);
 		if (statusFilter !== "all") query.set("status", statusFilter);
-		const response = await fetch(`/api/guestbook/admin/comments/?${query.toString()}`, {
-			headers: { Accept: "application/json" },
-		});
+		const response = await fetch(
+			`/api/guestbook/admin/comments/?${query.toString()}`,
+			{
+				headers: { Accept: "application/json" },
+			},
+		);
 		const data = await parseResponse(response);
 		if (!response.ok) {
 			throw new Error(

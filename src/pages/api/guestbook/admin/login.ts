@@ -34,7 +34,10 @@ export const POST: APIRoute = async ({ request }) => {
 	let passwordMatches = false;
 	try {
 		const [expected, submitted] = await Promise.all([
-			crypto.subtle.digest("SHA-256", new TextEncoder().encode(expectedPassword)),
+			crypto.subtle.digest(
+				"SHA-256",
+				new TextEncoder().encode(expectedPassword),
+			),
 			crypto.subtle.digest("SHA-256", new TextEncoder().encode(password)),
 		]);
 		const hex = (bytes: ArrayBuffer) =>
@@ -45,7 +48,9 @@ export const POST: APIRoute = async ({ request }) => {
 	} catch {
 		passwordMatches = false;
 	}
-	await new Promise((resolve) => setTimeout(resolve, Math.max(0, 300 - (Date.now() - start))));
+	await new Promise((resolve) =>
+		setTimeout(resolve, Math.max(0, 300 - (Date.now() - start))),
+	);
 	if (!passwordMatches) {
 		return jsonResponse({ message: "密码错误" }, 401);
 	}

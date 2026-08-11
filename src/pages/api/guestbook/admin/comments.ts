@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
+import type { AdminCommentItem } from "@/types/comment";
 import { getGuestbookEnv } from "@/utils/guestbook/guestbook-env";
 import {
 	authenticateAdmin,
 	decryptContact,
 	jsonResponse,
 } from "@/utils/guestbook/guestbook-server";
-import type { AdminCommentItem } from "@/types/comment";
 
 export const prerender = false;
 
@@ -33,7 +33,11 @@ export const GET: APIRoute = async ({ request, url }) => {
 		return jsonResponse({ message: "文章地址无效" }, 400);
 	}
 	const statusFilter = url.searchParams.get("status") || "published";
-	if (statusFilter !== "published" && statusFilter !== "deleted" && statusFilter !== "all") {
+	if (
+		statusFilter !== "published" &&
+		statusFilter !== "deleted" &&
+		statusFilter !== "all"
+	) {
 		return jsonResponse({ message: "评论状态不正确" }, 400);
 	}
 
@@ -48,7 +52,8 @@ export const GET: APIRoute = async ({ request, url }) => {
 			conditions.push("status = ?");
 			bindings.push(statusFilter);
 		}
-		const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+		const whereClause =
+			conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 		const result = await env.DB.prepare(
 			`SELECT id, path, display_name, content, parent_id, is_author, status,
 				contact_ciphertext, contact_iv, created_at
@@ -63,7 +68,11 @@ export const GET: APIRoute = async ({ request, url }) => {
 		const comments: AdminCommentItem[] = [];
 		for (const row of rows) {
 			let contact: string | null = null;
-			if (row.contact_ciphertext && row.contact_iv && env.CONTACT_ENCRYPTION_KEY) {
+			if (
+				row.contact_ciphertext &&
+				row.contact_iv &&
+				env.CONTACT_ENCRYPTION_KEY
+			) {
 				try {
 					contact = await decryptContact(
 						env.CONTACT_ENCRYPTION_KEY,

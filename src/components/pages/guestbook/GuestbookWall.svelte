@@ -160,8 +160,8 @@ function onNotePointerDown(event: PointerEvent, id: string): void {
 		element,
 		startX: event.clientX,
 		startY: event.clientY,
-		originX: parseFloat(element.style.left) || 0,
-		originY: parseFloat(element.style.top) || 0,
+		originX: Number.parseFloat(element.style.left) || 0,
+		originY: Number.parseFloat(element.style.top) || 0,
 		moved: false,
 	};
 	draggingId = id;
@@ -193,13 +193,13 @@ function onNotePointerUp(event: PointerEvent): void {
 		}
 		return;
 	}
-	const x = Math.max(0, Math.round(parseFloat(drag.element.style.left)));
-	const y = Math.max(0, Math.round(parseFloat(drag.element.style.top)));
+	const x = Math.max(0, Math.round(Number.parseFloat(drag.element.style.left)));
+	const y = Math.max(0, Math.round(Number.parseFloat(drag.element.style.top)));
 	if (id) positions[id] = { x, y, z: 10000 };
 	savePositions();
 	updateBoardHeight(
 		Array.from(
-			(boardElement?.querySelectorAll<HTMLElement>(".note[data-note-id]") || []),
+			boardElement?.querySelectorAll<HTMLElement>(".note[data-note-id]") || [],
 		),
 	);
 	event.preventDefault();
@@ -224,11 +224,16 @@ function formatDate(value: string): string {
 }
 
 function tiltClass(id: string): string {
-	const score = Array.from(id).reduce((total, character) => total + character.charCodeAt(0), 0);
+	const score = Array.from(id).reduce(
+		(total, character) => total + character.charCodeAt(0),
+		0,
+	);
 	return ["tilt-left", "tilt-none", "tilt-right"][score % 3];
 }
 
-async function parseResponse(response: Response): Promise<Record<string, unknown>> {
+async function parseResponse(
+	response: Response,
+): Promise<Record<string, unknown>> {
 	try {
 		return (await response.json()) as Record<string, unknown>;
 	} catch {
@@ -250,7 +255,9 @@ async function loadNotes(append = false): Promise<void> {
 		const response = await fetch(`/api/guestbook/notes/?${query.toString()}`, {
 			headers: { Accept: "application/json" },
 		});
-		const data = (await response.json()) as GuestbookListResponse & { message?: string };
+		const data = (await response.json()) as GuestbookListResponse & {
+			message?: string;
+		};
 		if (!response.ok) throw new Error(data.message || "便签加载失败");
 		notes = append ? [...notes, ...data.notes] : data.notes;
 		nextCursor = data.nextCursor;
@@ -299,16 +306,21 @@ async function submitNote(event: SubmitEvent): Promise<void> {
 			}),
 		});
 		const data = await parseResponse(response);
-		if (!response.ok) throw new Error(typeof data.message === "string" ? data.message : "便签提交失败");
+		if (!response.ok)
+			throw new Error(
+				typeof data.message === "string" ? data.message : "便签提交失败",
+			);
 
 		if (data.status === "published" && data.note) {
 			const note = data.note as GuestbookNote;
-			if (activeType === "all" || activeType === note.type) notes = [note, ...notes];
+			if (activeType === "all" || activeType === note.type)
+				notes = [note, ...notes];
 			submitState = "success";
 			submitMessage = "便签已经贴到墙上了";
 		} else {
 			submitState = "pending";
-			submitMessage = typeof data.message === "string" ? data.message : "便签已进入审核队列";
+			submitMessage =
+				typeof data.message === "string" ? data.message : "便签已进入审核队列";
 		}
 
 		content = "";
@@ -328,19 +340,30 @@ async function submitNote(event: SubmitEvent): Promise<void> {
 function loadTurnstile(): Promise<void> {
 	if (window.turnstile) return Promise.resolve();
 	return new Promise((resolve, reject) => {
-		const existing = document.querySelector<HTMLScriptElement>("script[data-guestbook-turnstile]");
+		const existing = document.querySelector<HTMLScriptElement>(
+			"script[data-guestbook-turnstile]",
+		);
 		if (existing) {
 			existing.addEventListener("load", () => resolve(), { once: true });
-			existing.addEventListener("error", () => reject(new Error("人机验证加载失败")), { once: true });
+			existing.addEventListener(
+				"error",
+				() => reject(new Error("人机验证加载失败")),
+				{ once: true },
+			);
 			return;
 		}
 		const script = document.createElement("script");
-		script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+		script.src =
+			"https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 		script.async = true;
 		script.defer = true;
 		script.dataset.guestbookTurnstile = "";
 		script.addEventListener("load", () => resolve(), { once: true });
-		script.addEventListener("error", () => reject(new Error("人机验证加载失败")), { once: true });
+		script.addEventListener(
+			"error",
+			() => reject(new Error("人机验证加载失败")),
+			{ once: true },
+		);
 		document.head.append(script);
 	});
 }
@@ -362,7 +385,9 @@ async function initializeTurnstile(): Promise<void> {
 				turnstileToken = "";
 			},
 			sitekey: config.turnstileSiteKey,
-			theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+			theme: document.documentElement.classList.contains("dark")
+				? "dark"
+				: "light",
 		});
 	} catch (error) {
 		submitState = "error";

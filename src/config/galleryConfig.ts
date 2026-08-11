@@ -18,8 +18,7 @@ export const galleryConfig: GalleryConfig = {
 		{
 			id: "Mommy",
 			name: "收藏图集1",
-			description:
-				"收藏了一些我喜欢的图片",
+			description: "收藏了一些我喜欢的图片",
 			location: "二次元宇宙",
 			date: "2026-08-09",
 			tags: ["加密相册", "收藏图集"],

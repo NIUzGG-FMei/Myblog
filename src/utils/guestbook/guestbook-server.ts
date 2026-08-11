@@ -82,7 +82,9 @@ export function adminNoteFromRow(row: AdminNoteRow): GuestbookAdminNote {
 		...publicNoteFromRow(row),
 		status: row.status,
 		moderationReason: row.moderation_reason,
-		reviewedAt: row.reviewed_at ? new Date(row.reviewed_at).toISOString() : null,
+		reviewedAt: row.reviewed_at
+			? new Date(row.reviewed_at).toISOString()
+			: null,
 		privateContactAvailable: row.has_contact === 1,
 	};
 }
@@ -114,10 +116,15 @@ export function decodeCursor(cursor: string | null): [number, string] | null {
 
 export async function sha256(value: string): Promise<string> {
 	const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
-	return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+	return Array.from(new Uint8Array(digest), (byte) =>
+		byte.toString(16).padStart(2, "0"),
+	).join("");
 }
 
-export async function hmacSha256(secret: string, value: string): Promise<string> {
+export async function hmacSha256(
+	secret: string,
+	value: string,
+): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
 		encoder.encode(secret),
@@ -125,19 +132,30 @@ export async function hmacSha256(secret: string, value: string): Promise<string>
 		false,
 		["sign"],
 	);
-	const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
-	return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join("");
+	const signature = await crypto.subtle.sign(
+		"HMAC",
+		key,
+		encoder.encode(value),
+	);
+	return Array.from(new Uint8Array(signature), (byte) =>
+		byte.toString(16).padStart(2, "0"),
+	).join("");
 }
 
 async function importContactKey(secret: string): Promise<CryptoKey> {
 	const bytes = base64ToBytes(secret);
 	if (bytes.byteLength !== 32) {
-		throw new Error("CONTACT_ENCRYPTION_KEY must be a base64-encoded 32-byte key");
+		throw new Error(
+			"CONTACT_ENCRYPTION_KEY must be a base64-encoded 32-byte key",
+		);
 	}
-	return crypto.subtle.importKey("raw", toArrayBuffer(bytes), "AES-GCM", false, [
-		"encrypt",
-		"decrypt",
-	]);
+	return crypto.subtle.importKey(
+		"raw",
+		toArrayBuffer(bytes),
+		"AES-GCM",
+		false,
+		["encrypt", "decrypt"],
+	);
 }
 
 export async function encryptContact(
@@ -244,11 +262,18 @@ export async function checkRateLimit(
 	};
 }
 
-export async function cleanupAbuseData(db: GuestbookD1Database, now: number): Promise<void> {
+export async function cleanupAbuseData(
+	db: GuestbookD1Database,
+	now: number,
+): Promise<void> {
 	const cutoff = now - 30 * 86_400_000;
 	await db.batch([
-		db.prepare("DELETE FROM guestbook_submission_events WHERE created_at < ?").bind(cutoff),
-		db.prepare("UPDATE guestbook_notes SET ip_hash = NULL WHERE created_at < ?").bind(cutoff),
+		db
+			.prepare("DELETE FROM guestbook_submission_events WHERE created_at < ?")
+			.bind(cutoff),
+		db
+			.prepare("UPDATE guestbook_notes SET ip_hash = NULL WHERE created_at < ?")
+			.bind(cutoff),
 	]);
 }
 
@@ -292,13 +317,16 @@ function readAdminSessionToken(request: Request): string | null {
 export async function authenticateAdmin(
 	request: Request,
 	environment: Env,
-): Promise<{ email: string; ok: true } | { message: string; ok: false; status: number }> {
+): Promise<
+	{ email: string; ok: true } | { message: string; ok: false; status: number }
+> {
 	if (!environment.SESSION) {
 		return { message: "管理访问尚未配置", ok: false, status: 503 };
 	}
 	const token = readAdminSessionToken(request);
 	if (!token) return { message: "需要管理员身份", ok: false, status: 401 };
 	const session = await environment.SESSION.get(`admin:${token}`);
-	if (!session) return { message: "管理员身份已过期，请重新登录", ok: false, status: 401 };
+	if (!session)
+		return { message: "管理员身份已过期，请重新登录", ok: false, status: 401 };
 	return { email: "admin", ok: true };
 }
