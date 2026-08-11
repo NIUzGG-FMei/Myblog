@@ -257,6 +257,7 @@ export default defineConfig({
 					"photo-library",
 					"pinboard",
 					"play-arrow-rounded",
+					"radar",
 					"rate-review",
 					"recommend",
 					"repeat-one-rounded",

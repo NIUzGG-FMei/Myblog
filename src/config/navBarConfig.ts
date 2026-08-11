@@ -64,6 +64,13 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 书签导航
 			LinkPresets.Booknav,
+
+			// 模型雷达
+			{
+				name: "模型雷达",
+				url: "/radar/",
+				icon: "material-symbols:radar",
+			},
 		],
 	});
 

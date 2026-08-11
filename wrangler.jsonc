@@ -7,6 +7,10 @@
 		{
 			"binding": "SESSION",
 			"id": "4e9b7958f80e48c0b6b7423773395422"
+		},
+		{
+			"binding": "RADAR_CACHE",
+			"id": "e25308edb74a49778f09adf07a3c7f45"
 		}
 	],
 	"d1_databases": [

@@ -1,0 +1,169 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+---
+
+<MainGridLayout
+    title="模型雷达"
+    description="CodexRadar DeepSWE 众测数据：各模型代码修复任务通过率与 IQ 历史"
+>
+    <div class="onload-animation">
+        <div class="card-base rounded-(--radius-large) p-6 mb-6">
+            <div class="flex items-center gap-3 mb-2">
+                <Icon is:inline name="material-symbols:radar" class="text-3xl text-(--primary)" />
+                <div>
+                    <h2 class="text-xl font-bold text-90">模型智力雷达</h2>
+                    <p class="text-sm text-75">
+                        数据来源：CodexRadar 分布式众测 · DeepSWE 代码修复基准，约每 30 分钟刷新一次
+                    </p>
+                </div>
+            </div>
+
+            <div id="radar-root" class="text-75 text-sm py-8 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <Icon is:inline name="material-symbols:sync-rounded" class="animate-spin" />
+                    <span>正在加载数据…</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-base rounded-(--radius-large) p-6">
+            <h3 class="font-semibold text-90 mb-2">IQ 历史曲线</h3>
+            <p class="text-sm text-75 mb-4">点击表格中的模型查看其历史得分变化曲线</p>
+            <div id="chart-wrap" class="hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="chart-title" class="text-sm font-medium text-90"></span>
+                    <span id="chart-latest" class="text-xs text-75"></span>
+                </div>
+                <svg id="iq-chart" class="w-full" viewBox="0 0 100 40" preserveAspectRatio="none" style="height: 12rem;"></svg>
+            </div>
+            <div id="chart-empty" class="text-75 text-sm py-6 text-center">暂无数据</div>
+        </div>
+    </div>
+
+    <script>
+        interface RadarModel {
+            model: string;
+            effort?: string;
+            pass_rate: number;
+            cells_passed: number;
+            cells: number;
+            graded: number;
+        }
+        interface RadarPoint {
+            ts: string;
+            score: number;
+        }
+        interface RadarData {
+            models: RadarModel[];
+            iq: Record<string, RadarPoint[]>;
+            generated_at: string;
+            source: string;
+            error?: string;
+        }
+
+        (function () {
+            const root = document.getElementById("radar-root") as HTMLElement;
+            const chartWrap = document.getElementById("chart-wrap") as HTMLElement;
+            const chartEmpty = document.getElementById("chart-empty") as HTMLElement;
+            const svg = document.getElementById("iq-chart") as HTMLElement;
+            const chartTitle = document.getElementById("chart-title") as HTMLElement;
+            const chartLatest = document.getElementById("chart-latest") as HTMLElement;
+            if (!root) return;
+
+            const effortLabel = (e: string) => {
+                if (!e) return "";
+                const map: Record<string, string> = { low: "低", high: "高", xhigh: "极高" };
+                return map[e] || e;
+            };
+
+            function renderTable(data: RadarData) {
+                const rows = data.models
+                    .map(
+                        (m: RadarModel, i: number) => `
+                        <tr class="cursor-pointer hover:bg-(--primary)/10 transition-colors" data-idx="${i}">
+                            <td class="py-2 px-2 font-mono text-sm">${m.model}${m.effort ? `<span class="text-60">@${effortLabel(m.effort)}</span>` : ""}</td>
+                            <td class="py-2 px-2 text-right font-mono text-sm">${(m.pass_rate * 100).toFixed(1)}%</td>
+                            <td class="py-2 px-2 text-right text-sm">${m.cells_passed}/${m.cells}</td>
+                            <td class="py-2 px-2 text-right text-sm text-60">${m.graded}</td>
+                        </tr>`,
+                    )
+                    .join("");
+                root.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-60 border-b border-(--line-divider)">
+                                    <th class="py-2 px-2 font-medium">模型</th>
+                                    <th class="py-2 px-2 text-right font-medium">通过率</th>
+                                    <th class="py-2 px-2 text-right font-medium">通过任务</th>
+                                    <th class="py-2 px-2 text-right font-medium">已评测</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-(--line-divider)/50">${rows}</tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-60 mt-3">
+                        数据来源：<a class="underline" href="${data.source}" target="_blank" rel="noopener">CodexRadar</a> ·
+                        更新于 ${new Date(data.generated_at).toLocaleString("zh-CN")}
+                    </p>`;
+                root.querySelectorAll("tr[data-idx]").forEach((tr) => {
+                    tr.addEventListener("click", () => renderChart(data, Number(tr.getAttribute("data-idx"))));
+                });
+            }
+
+            function renderChart(data: RadarData, idx: number) {
+                const m = data.models[idx];
+                const points = data.iq[m.model] || data.iq[`${m.model}@${m.effort}`] || [];
+                if (!points || points.length < 2) {
+                    chartWrap.classList.add("hidden");
+                    chartEmpty.classList.remove("hidden");
+                    chartEmpty.textContent = `「${m.model}」暂无历史数据`;
+                    return;
+                }
+                chartEmpty.classList.add("hidden");
+                chartWrap.classList.remove("hidden");
+                chartTitle.textContent = `${m.model}${m.effort ? ` @${effortLabel(m.effort)}` : ""} · 历史得分`;
+                chartLatest.textContent = `最新 ${points[points.length - 1].score.toFixed(1)}`;
+
+                const W = 100, H = 40, PAD = 3;
+                const scores = points.map((p: RadarPoint) => p.score);
+                const min = Math.min(...scores), max = Math.max(...scores);
+                const range = max - min || 1;
+                const coords = points.map((p: RadarPoint, i: number) => {
+                    const x = PAD + (i / (points.length - 1)) * (W - PAD * 2);
+                    const y = H - PAD - ((p.score - min) / range) * (H - PAD * 2);
+                    return `${x.toFixed(2)},${y.toFixed(2)}`;
+                });
+                const primary = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "#4f8cff";
+                svg.innerHTML = `
+                    <polyline points="${coords.join(" ")}" fill="none" stroke="${primary}" stroke-width="0.6" stroke-linejoin="round"/>
+                    <circle cx="${coords[coords.length - 1].split(",")[0]}" cy="${coords[coords.length - 1].split(",")[1]}" r="1.2" fill="${primary}"/>
+                    <text x="${PAD}" y="${PAD}" class="chart-label">${max.toFixed(1)}</text>
+                    <text x="${PAD}" y="${H - 1}" class="chart-label">${min.toFixed(1)}</text>`;
+                const labels = svg.querySelectorAll(".chart-label");
+                labels.forEach((t) => {
+                    t.setAttribute("font-size", "2.2");
+                    t.setAttribute("fill", "#888");
+                });
+            }
+
+            fetch("/api/codexradar/")
+                .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+                .then((data: RadarData) => {
+                    if (data.error) throw new Error(data.error);
+                    if (!data.models || !data.models.length) throw new Error("数据为空");
+                    root.classList.remove("py-8", "text-center");
+                    renderTable(data);
+                    renderChart(data, 0);
+                })
+                .catch((e: Error) => {
+                    root.innerHTML = `
+                        <div class="text-(--danger-color, #f87171)">
+                            <p class="mb-1">加载失败：${e.message || "未知错误"}</p>
+                            <button class="mt-2 px-4 py-1.5 bg-(--primary) text-white rounded-lg text-sm" onclick="location.reload()">重试</button>
+                        </div>`;
+                });
+        })();
+    </script>
+</MainGridLayout>

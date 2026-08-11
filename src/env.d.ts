@@ -72,6 +72,7 @@ declare global {
 	interface Env {
 		DB: GuestbookD1Database;
 		SESSION: KVNamespace;
+		RADAR_CACHE?: KVNamespace;
 		TURNSTILE_SECRET_KEY?: string;
 		CONTACT_ENCRYPTION_KEY?: string;
 		IP_HASH_SECRET?: string;
