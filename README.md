@@ -32,6 +32,7 @@
 - [x] **Cloudflare Workers 部署** - GitHub Actions 自动构建 + D1 数据库迁移 + Wrangler 部署，无需服务器
 - [x] **背景视频播放** - 支持本地/远程背景视频，多视频随机/顺序循环
 - [x] **RSS 订阅页** - 独立的 RSS 介绍与订阅链接复制页面，自动生成完整 RSS Feed
+- [x] **模型雷达页** - 代理 CodexRadar 众测数据，展示各模型 IQ、通过率与历史曲线，KV 缓存减轻第三方接口负担
 - [x] **防机器人** - 留言与评论接入 Cloudflare Turnstile 人机验证，配合 IP 哈希限流
 - [x] **个性化定制** - 自定义主题色、壁纸轮播、音乐播放器、看板娘（Spine / Live2D）、动态页、相册等
 

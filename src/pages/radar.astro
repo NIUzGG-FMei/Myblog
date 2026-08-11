@@ -5,7 +5,7 @@ import { Icon } from "astro-icon/components";
 
 <MainGridLayout
     title="模型雷达"
-    description="CodexRadar DeepSWE 众测数据：各模型代码修复任务通过率与 IQ 历史"
+    description="CodexRadar DeepSWE 众测数据：各模型 IQ 与推理档位代码修复任务通过率"
 >
     <div class="onload-animation">
         <div class="card-base rounded-(--radius-large) p-6 mb-6">
@@ -26,36 +26,27 @@ import { Icon } from "astro-icon/components";
                 </div>
             </div>
         </div>
-
-        <div class="card-base rounded-(--radius-large) p-6">
-            <h3 class="font-semibold text-90 mb-2">IQ 历史曲线</h3>
-            <p class="text-sm text-75 mb-4">点击表格中的模型查看其历史得分变化曲线</p>
-            <div id="chart-wrap" class="hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span id="chart-title" class="text-sm font-medium text-90"></span>
-                    <span id="chart-latest" class="text-xs text-75"></span>
-                </div>
-                <svg id="iq-chart" class="w-full" viewBox="0 0 100 40" preserveAspectRatio="none" style="height: 12rem;"></svg>
-            </div>
-            <div id="chart-empty" class="text-75 text-sm py-6 text-center">暂无数据</div>
-        </div>
     </div>
 
     <script>
-        interface RadarModel {
-            model: string;
-            effort?: string;
+        interface RadarTier {
+            effort: string;
             pass_rate: number;
             cells_passed: number;
             cells: number;
             graded: number;
+        }
+        interface RadarGroup {
+            model: string;
+            iq?: number;
+            tiers: RadarTier[];
         }
         interface RadarPoint {
             ts: string;
             score: number;
         }
         interface RadarData {
-            models: RadarModel[];
+            groups: RadarGroup[];
             iq: Record<string, RadarPoint[]>;
             generated_at: string;
             source: string;
@@ -64,12 +55,6 @@ import { Icon } from "astro-icon/components";
 
         (function () {
             const root = document.getElementById("radar-root") as HTMLElement;
-            const chartWrap = document.getElementById("chart-wrap") as HTMLElement;
-            const chartEmpty = document.getElementById("chart-empty") as HTMLElement;
-            const svg = document.getElementById("iq-chart") as HTMLElement;
-            const chartTitle = document.getElementById("chart-title") as HTMLElement;
-            const chartLatest = document.getElementById("chart-latest") as HTMLElement;
-            if (!root) return;
 
             const effortLabel = (e: string) => {
                 if (!e) return "";
@@ -77,57 +62,38 @@ import { Icon } from "astro-icon/components";
                 return map[e] || e;
             };
 
-            function renderTable(data: RadarData) {
-                const rows = data.models
+            function renderTiers(group: RadarGroup): string {
+                const rows = group.tiers
                     .map(
-                        (m: RadarModel, i: number) => `
-                        <tr class="cursor-pointer hover:bg-(--primary)/10 transition-colors" data-idx="${i}">
-                            <td class="py-2 px-2 font-mono text-sm">${m.model}${m.effort ? `<span class="text-60">@${effortLabel(m.effort)}</span>` : ""}</td>
-                            <td class="py-2 px-2 text-right font-mono text-sm">${(m.pass_rate * 100).toFixed(1)}%</td>
-                            <td class="py-2 px-2 text-right text-sm">${m.cells_passed}/${m.cells}</td>
-                            <td class="py-2 px-2 text-right text-sm text-60">${m.graded}</td>
+                        (t) => `
+                        <tr class="border-t border-(--line-divider)/40">
+                            <td class="py-2 px-2 font-mono text-sm">${effortLabel(t.effort) || t.effort}</td>
+                            <td class="py-2 px-2 text-right font-mono text-sm">${(t.pass_rate * 100).toFixed(1)}%</td>
+                            <td class="py-2 px-2 text-right text-sm">${t.cells_passed}/${t.cells}</td>
+                            <td class="py-2 px-2 text-right text-sm text-60">${t.graded}</td>
                         </tr>`,
                     )
                     .join("");
-                root.innerHTML = `
+                return `
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="text-xs text-60 border-b border-(--line-divider)">
-                                    <th class="py-2 px-2 font-medium">模型</th>
-                                    <th class="py-2 px-2 text-right font-medium">通过率</th>
-                                    <th class="py-2 px-2 text-right font-medium">通过任务</th>
-                                    <th class="py-2 px-2 text-right font-medium">已评测</th>
+                                <tr class="text-xs text-60">
+                                    <th class="py-1 px-2 font-medium">档位</th>
+                                    <th class="py-1 px-2 text-right font-medium">通过率</th>
+                                    <th class="py-1 px-2 text-right font-medium">通过任务</th>
+                                    <th class="py-1 px-2 text-right font-medium">已评测</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-(--line-divider)/50">${rows}</tbody>
+                            <tbody>${rows}</tbody>
                         </table>
-                    </div>
-                    <p class="text-xs text-60 mt-3">
-                        数据来源：<a class="underline" href="${data.source}" target="_blank" rel="noopener">CodexRadar</a> ·
-                        更新于 ${new Date(data.generated_at).toLocaleString("zh-CN")}
-                    </p>`;
-                root.querySelectorAll("tr[data-idx]").forEach((tr) => {
-                    tr.addEventListener("click", () => renderChart(data, Number(tr.getAttribute("data-idx"))));
-                });
+                    </div>`;
             }
 
-            function renderChart(data: RadarData, idx: number) {
-                const m = data.models[idx];
-                const points = data.iq[m.model] || data.iq[`${m.model}@${m.effort}`] || [];
-                if (!points || points.length < 2) {
-                    chartWrap.classList.add("hidden");
-                    chartEmpty.classList.remove("hidden");
-                    chartEmpty.textContent = `「${m.model}」暂无历史数据`;
-                    return;
-                }
-                chartEmpty.classList.add("hidden");
-                chartWrap.classList.remove("hidden");
-                chartTitle.textContent = `${m.model}${m.effort ? ` @${effortLabel(m.effort)}` : ""} · 历史得分`;
-                chartLatest.textContent = `最新 ${points[points.length - 1].score.toFixed(1)}`;
-
+            function renderChart(points: RadarPoint[] | undefined): string {
+                if (!points || points.length < 2) return "";
                 const W = 100, H = 40, PAD = 3;
-                const scores = points.map((p: RadarPoint) => p.score);
+                const scores = points.map((p) => p.score);
                 const min = Math.min(...scores), max = Math.max(...scores);
                 const range = max - min || 1;
                 const coords = points.map((p: RadarPoint, i: number) => {
@@ -136,15 +102,76 @@ import { Icon } from "astro-icon/components";
                     return `${x.toFixed(2)},${y.toFixed(2)}`;
                 });
                 const primary = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "#4f8cff";
-                svg.innerHTML = `
-                    <polyline points="${coords.join(" ")}" fill="none" stroke="${primary}" stroke-width="0.6" stroke-linejoin="round"/>
-                    <circle cx="${coords[coords.length - 1].split(",")[0]}" cy="${coords[coords.length - 1].split(",")[1]}" r="1.2" fill="${primary}"/>
-                    <text x="${PAD}" y="${PAD}" class="chart-label">${max.toFixed(1)}</text>
-                    <text x="${PAD}" y="${H - 1}" class="chart-label">${min.toFixed(1)}</text>`;
-                const labels = svg.querySelectorAll(".chart-label");
-                labels.forEach((t) => {
-                    t.setAttribute("font-size", "2.2");
-                    t.setAttribute("fill", "#888");
+                return `
+                    <div class="mt-4 pt-3 border-t border-(--line-divider)/40">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs text-75">IQ 历史曲线（最新 ${points[points.length - 1].score.toFixed(1)}）</span>
+                            <span class="text-xs text-60">${min.toFixed(1)} ~ ${max.toFixed(1)}</span>
+                        </div>
+                        <svg class="w-full" viewBox="0 0 100 40" preserveAspectRatio="none" style="height: 8rem;">
+                            <polyline points="${coords.join(" ")}" fill="none" stroke="${primary}" stroke-width="0.6" stroke-linejoin="round"/>
+                            <circle cx="${coords[coords.length - 1].split(",")[0]}" cy="${coords[coords.length - 1].split(",")[1]}" r="1.2" fill="${primary}"/>
+                        </svg>
+                    </div>`;
+            }
+
+            function renderGroups(data: RadarData) {
+                const cards = data.groups
+                    .map((g, i) => `
+                        <div class="card-base rounded-(--radius-large) mb-3 overflow-hidden group-card" data-idx="${i}">
+                            <button class="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-(--primary)/5 transition-colors" aria-expanded="false">
+                                <span class="flex items-center gap-3 min-w-0">
+                                    <span class="font-mono font-semibold text-90 truncate">${g.model}</span>
+                                    <span class="text-xs text-60 shrink-0">${g.tiers.length} 个档位</span>
+                                </span>
+                                <span class="flex items-center gap-3 shrink-0">
+                                    <span class="font-mono font-bold text-lg text-(--primary)">${g.iq !== undefined ? g.iq.toFixed(1) : "—"}</span>
+                                    <Icon is:inline name="material-symbols:expand-more-rounded" class="chevron text-xl text-60 transition-transform duration-300" />
+                                </span>
+                            </button>
+                            <div class="tiers-wrap grid transition-all duration-300 grid-rows-[0fr] opacity-0">
+                                <div class="overflow-hidden min-h-0">
+                                    <div class="px-5 pb-4">
+                                        <div class="tiers-body"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`)
+                    .join("");
+                root.innerHTML = `${cards}
+                    <p class="text-xs text-60 mt-3">
+                        数据来源：<a class="underline" href="${data.source}" target="_blank" rel="noopener">CodexRadar</a> ·
+                        更新于 ${new Date(data.generated_at).toLocaleString("zh-CN")} · 点击卡片展开各档位数据
+                    </p>`;
+
+                root.querySelectorAll<HTMLElement>(".group-card").forEach((card) => {
+                    const idx = Number(card.dataset.idx);
+                    const group = data.groups[idx];
+                    const body = card.querySelector(".tiers-body") as HTMLElement;
+                    body.innerHTML = `${renderTiers(group)}${renderChart(data.iq[group.model])}`;
+
+                    const btn = card.querySelector("button") as HTMLButtonElement;
+                    const chevron = card.querySelector(".chevron") as HTMLElement;
+                    btn.addEventListener("click", () => {
+                        const wrap = card.querySelector(".tiers-wrap") as HTMLElement;
+                        const isOpen = wrap.classList.contains("opacity-100");
+                        root.querySelectorAll<HTMLElement>(".tiers-wrap.opacity-100").forEach((w) => {
+                            w.classList.remove("opacity-100");
+                            w.classList.add("opacity-0");
+                            w.style.gridTemplateRows = "0fr";
+                            const b = w.parentElement?.parentElement?.querySelector("button");
+                            if (b) b.setAttribute("aria-expanded", "false");
+                            const ch = w.parentElement?.parentElement?.querySelector(".chevron") as HTMLElement | null;
+                            if (ch) ch.style.transform = "";
+                        });
+                        if (!isOpen) {
+                            wrap.classList.remove("opacity-0");
+                            wrap.classList.add("opacity-100");
+                            wrap.style.gridTemplateRows = "1fr";
+                            btn.setAttribute("aria-expanded", "true");
+                            chevron.style.transform = "rotate(180deg)";
+                        }
+                    });
                 });
             }
 
@@ -152,10 +179,9 @@ import { Icon } from "astro-icon/components";
                 .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
                 .then((data: RadarData) => {
                     if (data.error) throw new Error(data.error);
-                    if (!data.models || !data.models.length) throw new Error("数据为空");
+                    if (!data.groups || !data.groups.length) throw new Error("数据为空");
                     root.classList.remove("py-8", "text-center");
-                    renderTable(data);
-                    renderChart(data, 0);
+                    renderGroups(data);
                 })
                 .catch((e: Error) => {
                     root.innerHTML = `

@@ -44,6 +44,13 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
+	// 模型雷达
+	links.push({
+		name: "模型雷达",
+		url: "/radar/",
+		icon: "material-symbols:radar",
+	});
+
 	// 我的及其子菜单
 	links.push({
 		name: "我的",
@@ -64,13 +71,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// 书签导航
 			LinkPresets.Booknav,
-
-			// 模型雷达
-			{
-				name: "模型雷达",
-				url: "/radar/",
-				icon: "material-symbols:radar",
-			},
 		],
 	});
 

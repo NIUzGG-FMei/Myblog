@@ -3,12 +3,11 @@ import type { APIRoute } from "astro";
 export const prerender = false;
 
 const API_BASE = "https://api.codexradar.com";
-const KV_KEY = "codexradar:v1";
+const KV_KEY = "codexradar:v2";
 const CACHE_TTL_SECONDS = 1800;
 const HISTORY_POINTS = 48;
 
-interface RadarModel {
-	model: string;
+interface RadarTier {
 	effort: string;
 	pass_rate: number;
 	cells_passed: number;
@@ -16,8 +15,14 @@ interface RadarModel {
 	graded: number;
 }
 
+interface RadarGroup {
+	model: string;
+	iq?: number;
+	tiers: RadarTier[];
+}
+
 interface RadarPayload {
-	models: RadarModel[];
+	groups: RadarGroup[];
 	iq: Record<string, { ts: string; score: number }[]>;
 	generated_at: string;
 	source: string;
@@ -33,39 +38,91 @@ function json(data: unknown, status = 200): Response {
 	});
 }
 
+function num(value: unknown): number {
+	const n = Number(value);
+	return Number.isFinite(n) ? n : 0;
+}
+
 async function fetchFromCodexradar(): Promise<RadarPayload> {
 	const headers = { "User-Agent": "Mozilla/5.0 (compatible; FireflyBlog/1.0)" };
-	const [lbRes, iqRes] = await Promise.all([
-		fetch(`${API_BASE}/api/v1/leaderboard`, { headers }),
-		fetch(`${API_BASE}/api/v1/iq-history?v=20260807-goldset-v1`, { headers }),
-	]);
-	if (!lbRes.ok || !iqRes.ok) {
-		throw new Error(`codexradar upstream ${lbRes.status}/${iqRes.status}`);
-	}
-	const lb = (await lbRes.json()) as { models?: RadarModel[] };
-	const iq = (await iqRes.json()) as Record<
-		string,
-		{ ts: string; score: number }[]
-	>;
 
-	const models: RadarModel[] = (lb.models ?? [])
-		.map((m: RadarModel) => ({
-			model: m.model,
-			effort: m.effort,
-			pass_rate: m.pass_rate,
-			cells_passed: m.cells_passed,
-			cells: m.cells,
-			graded: m.graded,
-		}))
-		.sort((a, b) => b.pass_rate - a.pass_rate);
+	// 排行榜是核心数据，失败则整体失败
+	const lbRes = await fetch(`${API_BASE}/api/v1/leaderboard`, { headers });
+	if (!lbRes.ok) throw new Error(`leaderboard upstream ${lbRes.status}`);
+	const lb = (await lbRes.json()) as {
+		models?: {
+			model?: string;
+			effort?: string;
+			pass_rate?: number;
+			cells_passed?: number;
+			cells?: number;
+			graded?: number;
+		}[];
+	};
+
+	// iq-history 为辅助数据，独立抓取：失败只影响 IQ 列，不影响表格
+	let iq = {} as Record<string, { ts: string; score: number }[]>;
+	try {
+		const iqRes = await fetch(
+			`${API_BASE}/api/v1/iq-history?v=20260807-goldset-v1`,
+			{ headers },
+		);
+		if (iqRes.ok) iq = await iqRes.json();
+	} catch {
+		// 忽略，IQ 列显示 "—"
+	}
 
 	const iqSlim: RadarPayload["iq"] = {};
 	for (const [name, points] of Object.entries(iq)) {
-		iqSlim[name] = points.slice(-HISTORY_POINTS);
+		if (!Array.isArray(points)) continue;
+		iqSlim[name] = points
+			.filter(
+				(p): p is { ts: string; score: number } =>
+					typeof p?.score === "number" && Number.isFinite(p.score),
+			)
+			.slice(-HISTORY_POINTS);
 	}
 
+	const latestIq = (name: string): number | undefined => {
+		const points = iqSlim[name];
+		return points?.length ? points[points.length - 1].score : undefined;
+	};
+
+	// 按模型分组：组内为不同推理档位，组 IQ 优先取模型级历史，缺省则取组内最高档位 IQ
+	const byModel = new Map<string, RadarGroup>();
+	for (const m of lb.models ?? []) {
+		const model = (m.model ?? "").trim();
+		if (!model) continue;
+		let group = byModel.get(model);
+		if (!group) {
+			group = { model, tiers: [] };
+			byModel.set(model, group);
+		}
+		group.tiers.push({
+			effort: (m.effort ?? "").trim(),
+			pass_rate: num(m.pass_rate),
+			cells_passed: num(m.cells_passed),
+			cells: num(m.cells),
+			graded: num(m.graded),
+		});
+	}
+	for (const group of byModel.values()) {
+		group.tiers.sort((a, b) => b.pass_rate - a.pass_rate);
+		group.iq =
+			latestIq(group.model) ??
+			group.tiers
+				.map((t) => latestIq(`${group.model}@${t.effort}`))
+				.filter((v): v is number => v !== undefined)
+				.sort((a, b) => b - a)[0];
+	}
+	const groups = [...byModel.values()].sort(
+		(a, b) =>
+			(b.iq ?? Number.NEGATIVE_INFINITY) - (a.iq ?? Number.NEGATIVE_INFINITY) ||
+			(a.tiers[0]?.pass_rate ?? 0) - (b.tiers[0]?.pass_rate ?? 0),
+	);
+
 	return {
-		models,
+		groups,
 		iq: iqSlim,
 		generated_at: new Date().toISOString(),
 		source: "https://deng.codexradar.com/?benchmark=deep-swe",
