@@ -1,0 +1,140 @@
+---
+import { Icon } from "astro-icon/components";
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
+import type { WidgetComponentConfig } from "@/types/config";
+
+interface Props {
+	class?: string;
+	style?: string;
+	widgetConfig?: WidgetComponentConfig;
+}
+
+const { class: className, style, widgetConfig } = Astro.props;
+const showTitle = widgetConfig?.showTitle !== false;
+const timeZone = "Asia/Shanghai";
+const initialDate = new Date();
+
+const greetings = {
+	morning: "早上好，来杯牛奶！",
+	noon: "中午好，别吃晕碳了哦~",
+	afternoon: "下午好，学习累了就摸会鱼把...",
+	evening: "晚上好，你应该点开的是B站，不是这里^-^",
+	lateNight: "夜深了，早点休息Zzz...",
+};
+
+const getBeijingTimeParts = (date: Date) => {
+	const parts = new Intl.DateTimeFormat("en-GB", {
+		timeZone,
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+		hourCycle: "h23",
+	}).formatToParts(date);
+	const get = (type: Intl.DateTimeFormatPartTypes) =>
+		parts.find((part) => part.type === type)?.value ?? "00";
+
+	return {
+		hour: Number(get("hour")),
+		time: `${get("hour")}:${get("minute")}:${get("second")}`,
+	};
+};
+
+const getGreeting = (hour: number) => {
+	if (hour < 6) return greetings.lateNight;
+	if (hour < 12) return greetings.morning;
+	if (hour < 14) return greetings.noon;
+	if (hour < 18) return greetings.afternoon;
+	return greetings.evening;
+};
+
+const initialTimeParts = getBeijingTimeParts(initialDate);
+const initialGreeting = getGreeting(initialTimeParts.hour);
+---
+
+<WidgetLayout
+	name="北京时间"
+	showTitle={showTitle}
+	id="beijing-time-widget"
+	class={className}
+	style={style}
+>
+	<Icon
+		slot="title-icon"
+		is:inline
+		name="material-symbols:schedule-outline-rounded"
+		class="text-(--primary)"
+		aria-hidden="true"
+	/>
+	<div class="flex flex-col gap-2">
+		<div class="flex items-center justify-between gap-3">
+			<time
+				class="font-mono text-3xl font-semibold tabular-nums text-neutral-900 dark:text-neutral-50"
+				data-beijing-time-clock
+				datetime={initialDate.toISOString()}
+			>
+				{initialTimeParts.time}
+			</time>
+			<span class="text-xs text-neutral-400 dark:text-neutral-500">UTC+8</span>
+		</div>
+		<p
+			class="flex min-h-11 items-center text-sm leading-6 text-neutral-500 dark:text-neutral-400"
+			data-beijing-time-greeting
+		>
+			{initialGreeting}
+		</p>
+	</div>
+</WidgetLayout>
+
+<script is:inline data-swup-ignore-script define:vars={{ greetings }}>
+	(() => {
+		const clocks = document.querySelectorAll("[data-beijing-time-clock]");
+		const greetingElements = document.querySelectorAll(
+			"[data-beijing-time-greeting]",
+		);
+		if (!clocks.length || !greetingElements.length) return;
+
+		const timeZone = "Asia/Shanghai";
+		const formatter = new Intl.DateTimeFormat("en-GB", {
+			timeZone,
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hourCycle: "h23",
+		});
+		const hourFormatter = new Intl.DateTimeFormat("en-GB", {
+			timeZone,
+			hour: "2-digit",
+			hourCycle: "h23",
+		});
+
+		const getPart = (parts, type) =>
+			parts.find((part) => part.type === type)?.value ?? "00";
+		const getGreeting = (hour) => {
+			if (hour < 6) return greetings.lateNight;
+			if (hour < 12) return greetings.morning;
+			if (hour < 14) return greetings.noon;
+			if (hour < 18) return greetings.afternoon;
+			return greetings.evening;
+		};
+
+		const updateTime = () => {
+			const now = new Date();
+			const timeParts = formatter.formatToParts(now);
+			const hour = Number(
+				getPart(hourFormatter.formatToParts(now), "hour"),
+			);
+			const time = `${getPart(timeParts, "hour")}:${getPart(timeParts, "minute")}:${getPart(timeParts, "second")}`;
+
+			clocks.forEach((clock) => {
+				clock.textContent = time;
+				clock.setAttribute("datetime", now.toISOString());
+			});
+			greetingElements.forEach((element) => {
+				element.textContent = getGreeting(hour);
+			});
+		};
+
+		updateTime();
+		window.setInterval(updateTime, 1000);
+	})();
+</script>

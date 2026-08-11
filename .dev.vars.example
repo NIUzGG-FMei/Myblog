@@ -1,0 +1,21 @@
+# Optional: Cloudflare Turnstile official always-pass local test keys.
+# Keep both values empty to run the guestbook and comments without Turnstile.
+PUBLIC_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+
+PUBLIC_BACKGROUND_VIDEO_URL=
+PUBLIC_MUSIC_BASE_URL=
+
+# Optional: strengthens the one-way IP hash used only for rate limiting.
+IP_HASH_SECRET=
+
+# Required for the admin page (/guestbook/admin/): sets the admin login password.
+# On production use: pnpm exec wrangler secret put ADMIN_PASSWORD
+# For local dev, copy this file to .dev.vars and fill in a value.
+ADMIN_PASSWORD=
+
+# Optional: encrypts private contact info (QQ/WeChat/Email) from guestbook notes
+# and comments. Generate a 32-byte base64 key with:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# then: pnpm exec wrangler secret put CONTACT_ENCRYPTION_KEY
+CONTACT_ENCRYPTION_KEY=

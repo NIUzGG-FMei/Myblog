@@ -1,0 +1,87 @@
+左侧栏“音乐”的主要配置在：
+
+  src/config/musicConfig.ts:4
+
+  当前使用的是网易云歌单：
+
+  mode: "meting",
+
+  meting: {
+        server: "netease",
+        type: "playlist",
+        id: "10046455237",
+  },
+
+  编辑在线歌单
+
+  直接在网易云音乐中编辑歌单，然后把配置里的 id 改成自己的歌单 ID。通过分享歌单复制的链接，可以找到该歌单的ID：
+
+  https://music.163.com/#/playlist?id=13428662750
+
+  只填写最后的数字：
+
+  id: "13428662750",
+
+  使用本地音乐
+
+  将音乐放入 public/assets/music/，然后改为：
+
+  mode: "local",
+
+  local: {
+        playlist: [
+                {
+                        name: "歌曲名称",
+                        artist: "歌手名称",
+                        lrc: "/assets/music/song.lrc",
+                },
+        ],
+
+  显示开关
+
+  左侧栏组件在 src/config/sidebarConfig.ts:62，需要保持：
+
+  type: "music",
+  enable: true,
+
+  同时 src/config/musicConfig.ts:8 中的 showInSidebar 不能设为 false。
+
+  修改配置后，开发环境会自动更新；正式网站需要重新构建部署。修改在线歌单里的歌曲通常刷新页面即可生效
+
+
+=============================================================================
+播放只有30s时：
+
+ 这是音乐源的问题，不是播放器把歌曲截成了 30 秒。
+
+  当前播放器直接使用 Meting 接口返回的 item.url 播放，没有 30 秒定时限制：
+
+  - src/components/features/MusicManager.astro:154 接收歌曲播放地址
+  - src/components/features/MusicManager.astro:243 直接设置给 <audio>
+  - 只有歌曲播放结束或发生错误时才切换下一首
+
+  网易云中受版权、VIP 或地区限制的歌曲，第三方 Meting 接口可能只能返回 30 秒试听地址。前端无法把试听地址恢复成完整歌曲；
+  备用 API 也只在播放报错时切换，无法识别“正常播放但只有 30 秒”的情况。
+
+  最稳定的解决办法是使用你有权使用的完整音频文件，切换到本地模式：
+
+  mode: "local",
+
+  local: {
+        playlist: [
+                {
+                        name: "歌曲名称",
+                        artist: "歌手",
+                        url: "/assets/music/song.mp3",
+                        cover: "/assets/music/cover.webp",
+                        lrc: "",
+                },
+        ],
+  },
+
+  音频文件放在：
+
+  public/assets/music/
+
+  如果继续使用在线歌单，只能更换为能够合法提供完整播放地址的音乐源或 Meting 接口；仅修改歌单 ID 或填写 auth，不能解除网
+  易云的版权和试听限制。

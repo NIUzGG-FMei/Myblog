@@ -1,0 +1,16 @@
+---
+import GuestbookAdmin from "@/components/pages/guestbook/GuestbookAdmin.svelte";
+import { siteConfig } from "@/config";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import "@/styles/comment-admin.css";
+
+export const prerender = false;
+
+if (!siteConfig.pages.guestbook) {
+	return Astro.redirect("/404/");
+}
+---
+
+<MainGridLayout title="便签墙管理" description="审核和管理便签墙留言与文章评论">
+	<GuestbookAdmin client:load />
+</MainGridLayout>

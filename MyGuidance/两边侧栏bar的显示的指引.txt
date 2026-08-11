@@ -1,0 +1,31 @@
+src/config/sidebarConfig.ts：该文件配置了bar信息
+
+例如：122-148
+		{
+			// 组件类型：站点统计组件
+			type: "stats",
+			// 是否启用该组件
+			enable: true,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: false,
+		},
+		{
+			// 组件类型：站点信息组件
+			type: "siteInfo",
+			// 是否启用该组件
+			enable: false,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: true,
+			// 组件专属配置
+			specificConfig: {
+				siteInfo: {
+					// 未能识别的构建平台回退显示文本，可自定义
+					unknownBuildPlatform: "Unknown CI",
+				},
+			},
+		},
+我取消显示“站点信息”，显示“站点统计”

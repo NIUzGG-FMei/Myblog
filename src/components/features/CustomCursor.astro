@@ -1,0 +1,126 @@
+---
+---
+
+<div id="firefly-custom-cursor" aria-hidden="true">
+	<span>👍</span>
+</div>
+
+<script is:inline data-swup-ignore-script>
+	(() => {
+		const mediaQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+		if (!mediaQuery.matches) return;
+
+		const root = document.documentElement;
+		if (root.dataset.fireflyCursorInitialized === "true") return;
+		root.dataset.fireflyCursorInitialized = "true";
+		root.style.setProperty("cursor", "none", "important");
+		document.body?.style.setProperty("cursor", "none", "important");
+
+		// Keep component-level cursor declarations from restoring the native pointer.
+		const cursorOverride = document.createElement("style");
+		cursorOverride.id = "firefly-custom-cursor-override";
+		cursorOverride.textContent = `
+			html.firefly-custom-cursor,
+			html.firefly-custom-cursor *,
+			html.firefly-custom-cursor *::before,
+			html.firefly-custom-cursor *::after {
+				cursor: none !important;
+			}
+		`;
+		document.head.appendChild(cursorOverride);
+
+		const cursor = document.getElementById("firefly-custom-cursor");
+		if (!cursor) return;
+
+		const suppressTargetCursor = (target) => {
+			if (target instanceof HTMLElement || target instanceof SVGElement) {
+				target.style.setProperty("cursor", "none", "important");
+			}
+		};
+
+		const moveCursor = (event) => {
+			suppressTargetCursor(event.target);
+			cursor.style.left = `${event.clientX}px`;
+			cursor.style.top = `${event.clientY}px`;
+			cursor.classList.add("is-visible");
+		};
+
+		const hideCursor = () => {
+			cursor.classList.remove("is-visible");
+		};
+
+		const animateClick = (event) => {
+			if (event.button !== 0) return;
+			cursor.classList.remove("is-clicking");
+			void cursor.offsetWidth;
+			cursor.classList.add("is-clicking");
+		};
+
+		window.addEventListener("mousemove", moveCursor, { passive: true });
+		window.addEventListener("mouseup", animateClick);
+		window.addEventListener("blur", hideCursor);
+		document.addEventListener(
+			"mouseover",
+			(event) => suppressTargetCursor(event.target),
+			true,
+		);
+		document.addEventListener("mouseleave", hideCursor);
+		cursor.addEventListener("animationend", () => {
+			cursor.classList.remove("is-clicking");
+		});
+	})();
+</script>
+
+<style>
+	#firefly-custom-cursor {
+		display: none;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		:global(html.firefly-custom-cursor),
+		:global(html.firefly-custom-cursor body),
+		:global(html.firefly-custom-cursor body *) {
+			cursor: none !important;
+		}
+
+		#firefly-custom-cursor {
+			display: block;
+			position: fixed;
+			left: 0;
+			top: 0;
+			z-index: 2147483647;
+			pointer-events: none;
+			user-select: none;
+			opacity: 0;
+			transform: translate(-50%, -50%);
+			transition: opacity 120ms ease-out;
+			will-change: left, top;
+		}
+
+		#firefly-custom-cursor > span {
+			display: block;
+			font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+			font-size: 1.25rem;
+			line-height: 1;
+			transform-origin: center;
+		}
+
+		#firefly-custom-cursor.is-visible {
+			opacity: 1;
+		}
+
+		#firefly-custom-cursor.is-clicking > span {
+			animation: firefly-cursor-click 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		}
+	}
+
+	@keyframes firefly-cursor-click {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		42% {
+			transform: scale(1.35);
+		}
+	}
+</style>

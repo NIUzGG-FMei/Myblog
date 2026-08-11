@@ -1,0 +1,26 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "mfwblog",
+	"compatibility_date": "2026-08-10",
+	"compatibility_flags": ["nodejs_compat"],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "4e9b7958f80e48c0b6b7423773395422"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mfwblog-guestbook",
+			"database_id": "3d8fabfc-5ee9-4c86-a13b-7d182038fc32",
+			"migrations_dir": "migrations"
+		}
+	],
+	"assets": {
+		"directory": "./dist"
+	},
+	"observability": {
+		"enabled": true
+	}
+}

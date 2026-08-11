@@ -1,0 +1,55 @@
+左上角 Logo 和配文都在：
+
+  src/config/siteConfig.ts:66
+
+  修改配文
+
+  navbar: {
+        title: "我的博客",
+        // 其他配置...
+  }
+
+  导航栏优先使用 navbar.title；如果为空，才使用站点的 title。
+
+  修改 Logo 图片
+
+  当前使用亮色和暗色两张图片：
+
+  logo: {
+        type: "image",
+        value: "assets/images/logo/my-logo-light.png",
+        valueDark: "assets/images/logo/my-logo-dark.png",
+        alt: "我的博客 Logo",
+  },
+
+  对应文件放在：
+
+  src/assets/images/logo/my-logo-light.png
+  src/assets/images/logo/my-logo-dark.png
+
+  如果只使用一张图片，可以删除 valueDark。
+
+  也支持：
+
+  // 使用图标
+  logo: {
+        type: "icon",
+        value: "material-symbols:home-pin-outline",
+        alt: "Logo",
+  }
+
+  // 使用 public 目录图片
+  logo: {
+        type: "image",
+        value: "/assets/images/logo.png",
+        alt: "Logo",
+  }
+
+  // 使用网络图片
+  logo: {
+        type: "url",
+        value: "https://example.com/logo.png",
+        alt: "Logo",
+  }
+
+  修改后本地开发会自动更新，正式网站需要重新构建部署。

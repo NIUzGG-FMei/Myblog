@@ -1,0 +1,36 @@
+左侧栏头像配置在：
+
+  src/config/profileConfig.ts:3
+
+  当前使用：
+
+  avatar: "assets/images/avatar.avif",
+
+  对应图片文件是：
+
+  src/assets/images/avatar.avif
+
+  使用 src/assets 中的本地图片
+
+  将新图片放入 src/assets/images/，然后修改路径：
+
+  avatar: "assets/images/my-avatar.webp",
+
+  不要在路径前加 /，这样 Astro 会自动优化图片。
+
+  使用 public 中的图片
+
+  将图片放入：
+
+  public/assets/images/my-avatar.webp
+
+  配置为：
+
+  avatar: "/assets/images/my-avatar.webp",
+
+  也可以使用远程图片：
+
+  avatar: "https://example.com/avatar.webp",
+
+  图片建议使用 png、jpg、jpeg、webp 或 avif。修改后正式网站需要重新构建部署；如果头像仍显示旧图，可以换一个文件名以避免
+  浏览器缓存。若整个资料组件被隐藏，检查 src/config/sidebarConfig.ts:40 中 profile 的 enable 是否为 true。

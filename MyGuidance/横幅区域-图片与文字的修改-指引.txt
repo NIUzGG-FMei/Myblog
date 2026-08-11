@@ -1,0 +1,69 @@
+主页导航栏下方的横幅区域主要由 src/config/backgroundWallpaper.ts:3 控制。
+
+  修改背景图片
+
+  当前桌面端和移动端分别使用多张图片：
+
+  src: {
+        desktop: [
+                "assets/images/DesktopWallpaper/my-desktop.webp",
+        ],
+        mobile: [
+                "assets/images/MobileWallpaper/my-mobile.webp",
+        ],
+  },
+
+  图片分别放在：
+
+  src/assets/images/DesktopWallpaper/
+  src/assets/images/MobileWallpaper/
+
+  也可以使用 public 图片，例如：
+
+  desktop: ["/assets/images/banner.webp"],
+
+  对应文件放在 public/assets/images/banner.webp。建议使用自定义文件名，不要覆盖默认的 d1-d6、m1-m6。图片裁剪位置由下面配
+  置控制：
+
+  banner: {
+        position: "center",
+  },
+
+  修改 Lovely firefly
+
+  common: {
+        homeText: {
+                title: "我的博客",
+                titleSize: "4.5rem",
+        },
+  },
+
+  修改会动的文字
+
+  副标题和打字机效果也在同一处：
+
+  homeText: {
+        subtitle: [
+                "第一句话",
+                "第二句话",
+        ],
+        typewriter: {
+                enable: true,
+                speed: 100,
+                deleteSpeed: 50,
+                pauseTime: 2000,
+        },
+  },
+
+  - speed：输入速度，数值越小越快
+  - deleteSpeed：删除速度
+  - pauseTime：完整显示后的停留时间
+  - enable: false：关闭打字机效果；数组副标题会每次随机显示一条
+  - 如果只想显示固定文字，可写成 subtitle: "固定副标题"
+
+  如果你说的“字体”是字体样式而不是动画，修改 src/config/fontConfig.ts:87：
+
+  bannerTitleFont: "--font-inter",
+  bannerSubtitleFont: "--font-zen-maru-gothic",
+
+  修改后本地开发会自动更新，正式网站需要重新构建部署。

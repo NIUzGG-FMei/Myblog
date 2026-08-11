@@ -1,0 +1,25 @@
+左侧栏公告内容在这里编辑：
+
+  src/config/announcementConfig.ts:3
+
+  export const announcementConfig: AnnouncementConfig = {
+        title: "站点公告",
+        content: "这里填写新的公告内容。",
+        closable: true,
+  };
+
+  如需添加跳转链接：
+
+  link: {
+        enable: true,
+        text: "查看详情",
+        url: "/posts/example/",
+        external: false,
+  },
+
+  公告不是 Markdown 内容，没有单独的发布命令：
+
+  - 本地开发：保存后开发服务器会自动更新。
+  - 正式网站：提交该配置文件并重新构建、部署，例如执行 pnpm build。
+
+  如果公告不显示，检查 src/config/sidebarConfig.ts:51 中左侧组件的 type: "announcement" 是否仍为 enable: true。

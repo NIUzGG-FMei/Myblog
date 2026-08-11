@@ -1,0 +1,6 @@
+把图片放到
+/home/mofengwei/MyBlog/Firefly/public/assets/images/dynamic
+然后在动态中使用 
+![图片描述](/assets/images/dynamic/photo.webp)
+
+关于置顶动态和位置、注释功能详细看第一条2026.08.09的动态md文件

@@ -1,0 +1,21 @@
+/* The sidebar DOM stays mounted for Swup. Only the active guestbook route hides it. */
+#main-grid:has([data-full-width-page="guestbook"]) {
+	grid-template-columns: minmax(0, 1fr) !important;
+}
+
+#main-grid:has([data-full-width-page="guestbook"]) :is(
+	#left-sidebar-wrapper,
+	#left-sidebar-dynamic,
+	#right-sidebar-static,
+	#right-sidebar-dynamic,
+	#mobile-bottom-sidebar
+) {
+	display: none !important;
+}
+
+#main-grid:has([data-full-width-page="guestbook"]) > div:has(> #swup-container),
+#main-grid:has([data-full-width-page="guestbook"]) > .footer {
+	grid-column: 1 / -1 !important;
+	grid-row: auto !important;
+	max-width: none !important;
+}

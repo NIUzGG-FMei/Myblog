@@ -1,0 +1,86 @@
+ “我的 → 追番”不是通过 Markdown 编辑的，数据来自 Bilibili，当前配置位置是：
+
+  src/config/siteConfig.ts:217
+
+  anime: {
+        bilibili: {
+                uid: "38932988",
+        },
+  }
+
+  编辑方式：
+
+  1. 在 Bilibili 账号中添加或取消追番。
+  2. 将 uid 改成你的 Bilibili 用户 UID。
+  3. 重新执行 pnpm build 并部署，页面会重新拉取数据。
+
+  当前会拉取 Bilibili 的追番和追剧列表。也可以配置可选的 TMDB 列表：
+
+  tmdb: {
+        apiKey: "你的 TMDB API Key",
+        listId: "你的 TMDB 列表 ID",
+  }
+
+  public/anime-list.json 只是 TMDB 请求失败时的本地缓存，不是通常的编辑入口。页面开关在同一文件的 pages.anime，页面路由
+  是 /anime/。
+
+======================================================
+
+ “我的 → 番组计划”不是通过 Markdown 编辑，而是读取你在 Bangumi 的收藏记录。
+
+  编辑番组内容
+
+  登录 Bangumi 网站，在自己的收藏中添加、删除条目，或修改条目状态（想看、在看、看过、搁置等）。当前使用的用户 ID 是：
+
+  src/config/siteConfig.ts:195
+
+  bangumi: {
+        userId: "1143164",
+        mode: "dynamic",
+  }
+
+  当前 mode: "dynamic"，所以修改 Bangumi 收藏后刷新 /bangumi/ 通常就能看到最新内容，无需重新构建。
+
+  编辑页面设置
+
+  仍在 src/config/siteConfig.ts:195：
+
+  categoryOrder: ["anime", "book", "music", "game"],
+  categories: {
+        game: false, // 隐藏游戏分类
+  },
+
+  - userId：修改为你的 Bangumi 用户 ID
+  - categoryOrder：调整分类顺序
+  - categories：控制动画、书籍、音乐、游戏是否显示
+  - mode: "static"：构建时获取数据，修改收藏后需要重新 pnpm build
+  - pages.bangumi：控制整个“番组计划”页面是否启用
+
+  页面路由是 /bangumi/，页面布局代码在 src/pages/bangumi.astro，一般不需要直接修改。
+
+====================================================================
+
+目前我已经关闭了“番组计划”、“标签导航”，即为在src/config/siteConfig.ts:107
+pages: {
+		// 留言板页面开关，需要配置评论系统
+		guestbook: true,
+		// 番组计划页面开关，含追番、游戏、书籍和音乐
+		bangumi: false,
+		// 相册页面开关
+		gallery: true,
+		// 追番页面开关
+		anime: true,
+		// 动态页面开关
+		dynamic: true,
+		// 书签导航页面开关
+		booknav: false,
+	},
+
+
+
+
+
+
+
+
+
