@@ -1,5 +1,4 @@
 ---
-import { Icon } from "astro-icon/components";
 import type { MascotConfig } from "@/types/pioConfig";
 import { url } from "@/utils/url-utils";
 
@@ -50,12 +49,6 @@ const anchorStyle =
 						data-draw-label={drawLabel}
 						data-clear-label={clearLabel}
 					>
-						<span id="mascot-menu-icon-draw" class="mascot-menu-icon">
-							<Icon is:inline name="material-symbols:ink-pen-outline-rounded" />
-						</span>
-						<span id="mascot-menu-icon-clear" class="mascot-menu-icon hidden">
-							<Icon is:inline name="material-symbols:delete" />
-						</span>
 						<span id="mascot-menu-label">{drawLabel}</span>
 					</button>
 				</div>
@@ -116,12 +109,11 @@ const anchorStyle =
 	.mascot-menu-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
 		padding: 0.45rem 0.9rem;
 		border-radius: 9999px;
 		border: 1px solid var(--line-divider, rgb(0 0 0 / 10%));
 		background: var(--card-bg, #ffffff);
-		color: var(--text, inherit);
+		color: var(--content);
 		font-size: 0.85rem;
 		line-height: 1.2;
 		cursor: pointer;
@@ -139,12 +131,6 @@ const anchorStyle =
 		border-color: transparent;
 	}
 
-	.mascot-menu-icon {
-		display: inline-flex;
-		width: 1.1em;
-		height: 1.1em;
-	}
-
 	@media (max-width: 768px) {
 		.mascot-hide-on-mobile {
 			display: none !important;
@@ -158,8 +144,6 @@ const anchorStyle =
 		const img = document.getElementById("mascot-img");
 		const menu = document.getElementById("mascot-menu");
 		const btn = document.getElementById("mascot-menu-btn");
-		const iconDraw = document.getElementById("mascot-menu-icon-draw");
-		const iconClear = document.getElementById("mascot-menu-icon-clear");
 		const label = document.getElementById("mascot-menu-label");
 		const canvas = document.getElementById("mascot-draw-canvas");
 
@@ -168,8 +152,6 @@ const anchorStyle =
 			!img ||
 			!menu ||
 			!btn ||
-			!iconDraw ||
-			!iconClear ||
 			!label ||
 			!(canvas instanceof HTMLCanvasElement)
 		) {
@@ -235,8 +217,6 @@ const anchorStyle =
 			canvas.style.display = on ? "block" : "none";
 			canvas.style.pointerEvents = on ? "auto" : "none";
 			btn.classList.toggle("mascot-active", on);
-			iconDraw.classList.toggle("hidden", on);
-			iconClear.classList.toggle("hidden", !on);
 			label.textContent = on
 				? (btn.dataset.clearLabel || "清除笔迹")
 				: (btn.dataset.drawLabel || "随意画画");
