@@ -3,7 +3,7 @@ title: "细长和小目标的优化（一）：数据预处理方面"
 published: 2026-08-13
 description: "针对高光谱/多光谱 OBB 检测任务里的细长目标和小目标，聊聊 P2 检测头、tile 切片、截断目标处理等数据预处理方面的坑与选择。"
 image: ./images/obb-slender-small-objects/fig1-fn-truck.png
-tags: [OBB, 目标检测, 小目标检测, YOLO, 多光谱]
+tags: [OBB, 目标检测, 小目标检测, YOLO, 多光谱, 数据预处理]
 category: 深度学习
 draft: false
 slug: obb-slender-small-objects

@@ -1,4 +1,44 @@
-import type { Live2DWidgetConfig, SpineModelConfig } from "../types/pioConfig";
+import type {
+	Live2DWidgetConfig,
+	MascotConfig,
+	SpineModelConfig,
+} from "../types/pioConfig";
+
+// 静态图片看板娘配置（奶葱骑士）
+export const mascotConfig: MascotConfig = {
+	// 静态看板娘开关
+	enable: true,
+
+	// 看板娘图片路径（public 目录下）
+	image: "/pio/naicongqishi.png",
+
+	// 展示宽度（px），高度按图片比例自动计算
+	size: 110,
+
+	// 初始位置配置（拖动后以实际位置为准）
+	position: {
+		// 初始位置，bottom-right 或 bottom-left
+		corner: "bottom-right",
+		// 距右边缘偏移（px）
+		offsetX: 16,
+		// 距下边缘偏移（px），默认抬高避免挡住返回顶部按钮
+		offsetY: 96,
+	},
+
+	// 层级
+	zIndex: 990,
+
+	// 移动端隐藏
+	hideOnMobile: false,
+
+	// 菜单配置
+	menu: {
+		// 未画画时的菜单文案
+		drawLabel: "随意画画",
+		// 画画中的菜单文案（点击后清除笔迹）
+		clearLabel: "清除笔迹",
+	},
+};
 
 // Spine 看板娘配置
 export const spineModelConfig: SpineModelConfig = {

@@ -1,0 +1,375 @@
+---
+import { Icon } from "astro-icon/components";
+import type { MascotConfig } from "@/types/pioConfig";
+import { url } from "@/utils/url-utils";
+
+interface Props {
+	config: MascotConfig;
+}
+
+const { config } = Astro.props;
+
+const imageUrl = url(config.image);
+const size = config.size ?? 110;
+const corner = config.position?.corner ?? "bottom-right";
+const offsetX = config.position?.offsetX ?? 16;
+const offsetY = config.position?.offsetY ?? 96;
+const zIndex = config.zIndex ?? 990;
+const canvasZIndex = zIndex - 10;
+const hideOnMobile = config.hideOnMobile ?? false;
+const drawLabel = config.menu?.drawLabel ?? "随意画画";
+const clearLabel = config.menu?.clearLabel ?? "清除笔迹";
+
+const anchorStyle =
+	corner === "bottom-left"
+		? `left: ${offsetX}px; bottom: ${offsetY}px;`
+		: `right: ${offsetX}px; bottom: ${offsetY}px;`;
+---
+
+{
+	config.enable && (
+		<>
+			<canvas
+				id="mascot-draw-canvas"
+				class="mascot-canvas"
+				style={`z-index: ${canvasZIndex};`}
+				aria-hidden="true"
+			>
+			</canvas>
+
+			<div
+				id="mascot-container"
+				class:list={["mascot-container", { "mascot-hide-on-mobile": hideOnMobile }]}
+				style={`z-index: ${zIndex}; ${anchorStyle}`}
+			>
+				<div id="mascot-menu" class="mascot-menu hidden">
+					<button
+						id="mascot-menu-btn"
+						type="button"
+						class="mascot-menu-btn"
+						data-draw-label={drawLabel}
+						data-clear-label={clearLabel}
+					>
+						<span id="mascot-menu-icon-draw" class="mascot-menu-icon">
+							<Icon is:inline name="material-symbols:ink-pen-outline-rounded" />
+						</span>
+						<span id="mascot-menu-icon-clear" class="mascot-menu-icon hidden">
+							<Icon is:inline name="material-symbols:delete" />
+						</span>
+						<span id="mascot-menu-label">{drawLabel}</span>
+					</button>
+				</div>
+				<img
+					id="mascot-img"
+					class="mascot-img"
+					src={imageUrl}
+					alt="看板娘"
+					draggable="false"
+					width={size}
+					loading="eager"
+					fetchpriority="low"
+				/>
+			</div>
+		</>
+	)
+}
+
+<style>
+	.mascot-canvas {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		display: none;
+		pointer-events: none;
+		touch-action: none;
+		cursor: crosshair;
+	}
+
+	.mascot-container {
+		position: fixed;
+		pointer-events: auto;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	.mascot-img {
+		display: block;
+		cursor: grab;
+		touch-action: none;
+		-webkit-user-drag: none;
+		user-drag: none;
+	}
+
+	.mascot-container.mascot-dragging .mascot-img {
+		cursor: grabbing;
+	}
+
+	.mascot-menu {
+		position: absolute;
+		right: 0;
+		bottom: calc(100% + 8px);
+		pointer-events: auto;
+		white-space: nowrap;
+	}
+
+	.mascot-menu-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.45rem 0.9rem;
+		border-radius: 9999px;
+		border: 1px solid var(--line-divider, rgb(0 0 0 / 10%));
+		background: var(--card-bg, #ffffff);
+		color: var(--text, inherit);
+		font-size: 0.85rem;
+		line-height: 1.2;
+		cursor: pointer;
+		box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+		transition: transform 0.15s ease, background-color 0.15s ease;
+	}
+
+	.mascot-menu-btn:hover {
+		transform: translateY(-1px);
+	}
+
+	.mascot-menu-btn.mascot-active {
+		background: var(--primary, rgb(245 158 11 / 90%));
+		color: #ffffff;
+		border-color: transparent;
+	}
+
+	.mascot-menu-icon {
+		display: inline-flex;
+		width: 1.1em;
+		height: 1.1em;
+	}
+
+	@media (max-width: 768px) {
+		.mascot-hide-on-mobile {
+			display: none !important;
+		}
+	}
+</style>
+
+<script>
+	function initMascot() {
+		const container = document.getElementById("mascot-container");
+		const img = document.getElementById("mascot-img");
+		const menu = document.getElementById("mascot-menu");
+		const btn = document.getElementById("mascot-menu-btn");
+		const iconDraw = document.getElementById("mascot-menu-icon-draw");
+		const iconClear = document.getElementById("mascot-menu-icon-clear");
+		const label = document.getElementById("mascot-menu-label");
+		const canvas = document.getElementById("mascot-draw-canvas");
+
+		if (
+			!container ||
+			!img ||
+			!menu ||
+			!btn ||
+			!iconDraw ||
+			!iconClear ||
+			!label ||
+			!(canvas instanceof HTMLCanvasElement)
+		) {
+			return;
+		}
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		let menuOpen = false;
+		let drawing = false;
+		let drag: {
+			startX: number;
+			startY: number;
+			originX: number;
+			originY: number;
+			moved: boolean;
+		} | null = null;
+		const strokes: { points: number[][]; color: string; width: number }[] = [];
+		let currentStroke: { points: number[][]; color: string; width: number } | null =
+			null;
+
+		const strokeColor = () => {
+			const color = getComputedStyle(document.documentElement)
+				.getPropertyValue("--primary")
+				.trim();
+			return color || "#f59e0b";
+		};
+
+		const paintStroke = (stroke: {
+			points: number[][];
+			color: string;
+			width: number;
+		}) => {
+			if (stroke.points.length < 2) return;
+			ctx.strokeStyle = stroke.color;
+			ctx.lineWidth = stroke.width;
+			ctx.lineCap = "round";
+			ctx.lineJoin = "round";
+			ctx.beginPath();
+			ctx.moveTo(stroke.points[0][0], stroke.points[0][1]);
+			for (let i = 1; i < stroke.points.length; i++) {
+				ctx.lineTo(stroke.points[i][0], stroke.points[i][1]);
+			}
+			ctx.stroke();
+		};
+
+		const redraw = () => {
+			ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+			for (const stroke of strokes) paintStroke(stroke);
+		};
+
+		const fitCanvas = () => {
+			const dpr = window.devicePixelRatio || 1;
+			canvas.width = Math.round(window.innerWidth * dpr);
+			canvas.height = Math.round(window.innerHeight * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			redraw();
+		};
+
+		const setDrawing = (on: boolean) => {
+			drawing = on;
+			canvas.style.display = on ? "block" : "none";
+			canvas.style.pointerEvents = on ? "auto" : "none";
+			btn.classList.toggle("mascot-active", on);
+			iconDraw.classList.toggle("hidden", on);
+			iconClear.classList.toggle("hidden", !on);
+			label.textContent = on
+				? (btn.dataset.clearLabel || "清除笔迹")
+				: (btn.dataset.drawLabel || "随意画画");
+			if (!on) {
+				strokes.length = 0;
+				redraw();
+			}
+		};
+
+		const openMenu = () => {
+			menuOpen = true;
+			menu.classList.remove("hidden");
+			// 看板娘太靠上时菜单改为向下弹出，避免被顶出屏幕
+			const rect = container.getBoundingClientRect();
+			if (rect.top < 80) {
+				menu.style.bottom = "auto";
+				menu.style.top = "calc(100% + 8px)";
+			} else {
+				menu.style.top = "auto";
+				menu.style.bottom = "calc(100% + 8px)";
+			}
+		};
+
+		const closeMenu = () => {
+			menuOpen = false;
+			menu.classList.add("hidden");
+		};
+
+		// 菜单按钮：切换画画模式，关掉时清除笔迹
+		btn.addEventListener("click", () => {
+			setDrawing(!drawing);
+			closeMenu();
+		});
+
+		// 点击菜单以外的区域关闭菜单
+		document.addEventListener("pointerdown", (event) => {
+			if (!menuOpen) return;
+			if (event.target instanceof Node && container.contains(event.target)) {
+				return;
+			}
+			closeMenu();
+		});
+
+		// 涂鸦画布
+		canvas.addEventListener("pointerdown", (event) => {
+			if (!drawing) return;
+			currentStroke = {
+				points: [[event.clientX, event.clientY]],
+				color: strokeColor(),
+				width: 4,
+			};
+			strokes.push(currentStroke);
+			canvas.setPointerCapture(event.pointerId);
+		});
+
+		canvas.addEventListener("pointermove", (event) => {
+			if (!drawing || !currentStroke) return;
+			const points = currentStroke.points;
+			const prev = points[points.length - 1];
+			points.push([event.clientX, event.clientY]);
+			ctx.strokeStyle = currentStroke.color;
+			ctx.lineWidth = currentStroke.width;
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(prev[0], prev[1]);
+			ctx.lineTo(event.clientX, event.clientY);
+			ctx.stroke();
+		});
+
+		const endStroke = () => {
+			currentStroke = null;
+		};
+		canvas.addEventListener("pointerup", endStroke);
+		canvas.addEventListener("pointercancel", endStroke);
+
+		// 看板娘拖动
+		img.addEventListener("pointerdown", (event) => {
+			event.preventDefault();
+			img.setPointerCapture(event.pointerId);
+			// 从角锚定切换为坐标定位
+			const rect = container.getBoundingClientRect();
+			container.style.left = `${rect.left}px`;
+			container.style.top = `${rect.top}px`;
+			container.style.right = "auto";
+			container.style.bottom = "auto";
+			drag = {
+				startX: event.clientX,
+				startY: event.clientY,
+				originX: rect.left,
+				originY: rect.top,
+				moved: false,
+			};
+			if (menuOpen) closeMenu();
+		});
+
+		img.addEventListener("pointermove", (event) => {
+			if (!drag) return;
+			const dx = event.clientX - drag.startX;
+			const dy = event.clientY - drag.startY;
+			if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+			drag.moved = true;
+			container.classList.add("mascot-dragging");
+			const rect = container.getBoundingClientRect();
+			const x = Math.min(
+				Math.max(drag.originX + dx, 0),
+				window.innerWidth - rect.width,
+			);
+			const y = Math.min(
+				Math.max(drag.originY + dy, 0),
+				window.innerHeight - rect.height,
+			);
+			container.style.left = `${x}px`;
+			container.style.top = `${y}px`;
+		});
+
+		const endDrag = () => {
+			if (!drag) return;
+			const moved = drag.moved;
+			drag = null;
+			container.classList.remove("mascot-dragging");
+			if (!moved) {
+				menuOpen ? closeMenu() : openMenu();
+			}
+		};
+		img.addEventListener("pointerup", endDrag);
+		img.addEventListener("pointercancel", () => {
+			drag = null;
+			container.classList.remove("mascot-dragging");
+		});
+
+		window.addEventListener("resize", fitCanvas);
+		fitCanvas();
+	}
+
+	initMascot();
+</script>

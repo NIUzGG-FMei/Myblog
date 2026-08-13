@@ -32,6 +32,24 @@ export type SpineModelConfig = {
 	opacity?: number; // 透明度，0-1，默认1.0
 };
 
+// 静态图片看板娘配置
+export type MascotConfig = {
+	enable: boolean; // 是否启用静态看板娘
+	image: string; // 看板娘图片路径（public 目录下，如 "/pio/naicongqishi.png"）
+	size?: number; // 展示宽度（px），默认 110，高度按比例
+	position?: {
+		corner?: "bottom-left" | "bottom-right"; // 初始位置，默认 "bottom-right"
+		offsetX?: number; // 距边缘水平偏移，默认 16
+		offsetY?: number; // 距边缘垂直偏移，默认 96
+	};
+	zIndex?: number; // 层级，默认 990（涂鸦画布为 zIndex - 10）
+	hideOnMobile?: boolean; // 是否在移动端隐藏，默认 false
+	menu?: {
+		drawLabel?: string; // 未画画时的菜单文案，默认 "随意画画"
+		clearLabel?: string; // 画画中的菜单文案（点击清除笔迹），默认 "清除笔迹"
+	};
+};
+
 // Live2D 看板娘配置 (使用 l2d-widget)
 export type Live2DWidgetConfig = {
 	enable: boolean; // 是否启用 Live2D 看板娘
