@@ -19,8 +19,9 @@ export const mascotConfig: MascotConfig = {
 	position: {
 		// 初始位置，bottom-right 或 bottom-left
 		corner: "bottom-right",
-		// 距右边缘偏移（px）
-		offsetX: 16,
+		// 距右边缘偏移（px）= 基础边距 16 + 1.5 个看板娘宽度（110 * 1.5 = 165），
+		// 相当于默认位置向左偏移 1.5 个看板娘自身大小
+		offsetX: 181,
 		// 距下边缘偏移（px），默认抬高避免挡住返回顶部按钮
 		offsetY: 96,
 	},
