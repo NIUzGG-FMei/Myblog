@@ -18,5 +18,12 @@
   "src:assets/images/HomeWallpaper/奶龙力作3.avif": "b2a898908576564934",
   "src:assets/images/HomeWallpaper/奶龙力作2.webp": "43494d46494c423c32",
   "src:assets/images/HomeWallpaper/奶龙力作1.png": "614b284e3b1d432d10",
-  "public:assets/images/dynamic/image1-longniangchufang.png": "b4a6ab7d727a72636b"
+  "public:assets/images/dynamic/image1-longniangchufang.png": "b4a6ab7d727a72636b",
+  "src:content/posts/images/obb-slender-small-objects/fig7-clipped-gt-box.png": "120e0a534040472e33",
+  "src:content/posts/images/obb-slender-small-objects/fig6-rect-out-of-bounds.png": "120d09514548463237",
+  "src:content/posts/images/obb-slender-small-objects/fig5-patch-256.png": "130e08473b4a3f2938",
+  "src:content/posts/images/obb-slender-small-objects/fig4-fp-similar-object.png": "1b180c4442414f454b",
+  "src:content/posts/images/obb-slender-small-objects/fig3-fp-partial-truck.png": "302a35312f3f474450",
+  "src:content/posts/images/obb-slender-small-objects/fig2-fp-background-truck.png": "1b180c4442414e454a",
+  "src:content/posts/images/obb-slender-small-objects/fig1-fn-truck.png": "2f2a36312f3f474450"
 }
