@@ -34,7 +34,8 @@
 - [x] **RSS 订阅页** - 独立的 RSS 介绍与订阅链接复制页面，自动生成完整 RSS Feed
 - [x] **模型雷达页** - 代理 CodexRadar 众测数据，展示各模型 IQ、通过率与历史曲线，KV 缓存减轻第三方接口负担
 - [x] **防机器人** - 留言与评论接入 Cloudflare Turnstile 人机验证，配合 IP 哈希限流
-- [x] **个性化定制** - 自定义主题色、壁纸轮播、音乐播放器、看板娘（Spine / Live2D）、动态页、相册等
+- [x] **个性化定制** - 自定义主题色、壁纸轮播、音乐播放器、看板娘（Spine / Live2D / 静态涂鸦）、动态页、相册等
+- [x] **静态涂鸦看板娘** - 可拖动的静态图片看板娘（默认右下角），点击弹出菜单，一键开启/清除全屏涂鸦笔迹
 
 ## 🚀 快速开始
 
@@ -94,7 +95,7 @@ src/
 │   ├── galleryConfig.ts          # 相册配置
 │   ├── musicConfig.ts            # 音乐播放器配置
 │   ├── navBarConfig.ts           # 导航栏配置
-│   ├── pioConfig.ts              # 看板娘配置
+│   ├── pioConfig.ts              # 看板娘配置（Spine / Live2D / 静态涂鸦）
 │   ├── profileConfig.ts          # 用户资料配置
 │   └── ...                       # 其余功能模块配置
 ```
@@ -104,6 +105,46 @@ src/
 ```typescript
 const SITE_LANG = "zh_CN"; // zh_CN | zh_TW | en | ja | ru | ko
 ```
+
+### 静态涂鸦看板娘
+
+编辑 `src/config/pioConfig.ts` 中的 `mascotConfig`：
+
+```typescript
+export const mascotConfig: MascotConfig = {
+	enable: true,                  // 开关
+	image: "/pio/naicongqishi.png", // 默认看板娘图片（放 public/ 目录，替换文件即可换形象）
+	images: [                       // 全部看板娘形象列表（含默认 image），用于随机切换
+		"/pio/naicongqishi.png",
+		"/pio/mascots/binghongchanaiwa.png",
+		// ... 其他形象
+	],
+	size: 110,                     // 参考展示尺寸（px），各形象按原始比例缩放到“差不多大”
+	position: {
+		corner: "bottom-right",     // 初始位置：bottom-left / bottom-right
+		offsetX: 181,               // 距边缘水平偏移（px）
+		offsetY: 96,                // 距边缘垂直偏移（px）
+	},
+	zIndex: 990,                   // 层级
+	hideOnMobile: false,           // 移动端是否隐藏
+	menu: {
+		drawLabel: "随意画画",      // 涂鸦菜单文案
+		clearLabel: "清除笔迹",     // 清除笔迹菜单文案
+	},
+	random: {
+		enabled: true,              // 是否启用定时随机切换形象
+		interval: 60000,            // 解锁时随机切换间隔（毫秒），默认一分钟
+	},
+};
+```
+
+- 看板娘可任意拖动，位置不会持久化（刷新后回到初始位置）
+- 点击看板娘弹出菜单，再次点击收回菜单，菜单包含三个功能：
+  - **锁定/解锁**（锁图标）：锁定时形象保持不变，解锁后每间隔 `random.interval` 自动随机更换形象
+  - **刷新**（循环箭头图标）：无论锁定与否，点击立即随机更换一个形象
+  - **随意画画 / 清除笔迹**：开启全屏涂鸦，再次点击清除笔迹并退出
+- 各形象保持原始比例，统一缩放到与默认形象差不多大的尺寸（按面积等比缩放）
+- 新增形象：把图片放到 `public/` 目录（建议透明背景 PNG），在 `images` 列表追加路径即可
 
 ## ⚙️ 文章 Frontmatter
 

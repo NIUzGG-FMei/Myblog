@@ -140,6 +140,11 @@ const anchorStyle =
 		gap: 0.35rem;
 	}
 
+	/* 覆盖 Tailwind 的 .hidden（组件内 display:flex 优先级更高，需显式声明） */
+	.mascot-menu.hidden {
+		display: none;
+	}
+
 	.mascot-menu-icon-btn {
 		display: inline-flex;
 		align-items: center;
