@@ -1,4 +1,5 @@
 ---
+import { Icon } from "astro-icon/components";
 import type { MascotConfig } from "@/types/pioConfig";
 import { url } from "@/utils/url-utils";
 
@@ -9,6 +10,9 @@ interface Props {
 const { config } = Astro.props;
 
 const imageUrl = url(config.image);
+const allImages = [imageUrl, ...(config.images ?? []).map((p) => url(p))].filter(
+	(value, index, self) => self.indexOf(value) === index,
+);
 const size = config.size ?? 110;
 const corner = config.position?.corner ?? "bottom-right";
 const offsetX = config.position?.offsetX ?? 16;
@@ -18,6 +22,8 @@ const canvasZIndex = zIndex - 10;
 const hideOnMobile = config.hideOnMobile ?? false;
 const drawLabel = config.menu?.drawLabel ?? "随意画画";
 const clearLabel = config.menu?.clearLabel ?? "清除笔迹";
+const randomEnabled = config.random?.enabled ?? true;
+const randomInterval = config.random?.interval ?? 60000;
 
 const anchorStyle =
 	corner === "bottom-left"
@@ -40,8 +46,33 @@ const anchorStyle =
 				id="mascot-container"
 				class:list={["mascot-container", { "mascot-hide-on-mobile": hideOnMobile }]}
 				style={`z-index: ${zIndex}; ${anchorStyle}`}
+				data-images={JSON.stringify(allImages)}
+				data-random-enabled={randomEnabled}
+				data-random-interval={randomInterval}
+				data-size={size}
 			>
 				<div id="mascot-menu" class="mascot-menu hidden">
+					<button
+						id="mascot-menu-lock"
+						type="button"
+						class="mascot-menu-icon-btn"
+						title="锁定/解锁形象"
+					>
+						<span id="mascot-menu-icon-lock">
+							<Icon is:inline name="material-symbols:lock" />
+						</span>
+						<span id="mascot-menu-icon-unlock" class="hidden">
+							<Icon is:inline name="material-symbols:lock-open-rounded" />
+						</span>
+					</button>
+					<button
+						id="mascot-menu-refresh"
+						type="button"
+						class="mascot-menu-icon-btn"
+						title="刷新形象"
+					>
+						<Icon is:inline name="material-symbols:sync-rounded" />
+					</button>
 					<button
 						id="mascot-menu-btn"
 						type="button"
@@ -104,6 +135,35 @@ const anchorStyle =
 		bottom: calc(100% + 8px);
 		pointer-events: auto;
 		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.mascot-menu-icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 9999px;
+		border: 1px solid var(--line-divider, rgb(0 0 0 / 10%));
+		background: var(--card-bg, #ffffff);
+		color: var(--content);
+		font-size: 1.1rem;
+		cursor: pointer;
+		box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+		transition: transform 0.15s ease, background-color 0.15s ease;
+	}
+
+	.mascot-menu-icon-btn:hover {
+		transform: translateY(-1px);
+	}
+
+	.mascot-menu-icon-btn.mascot-active {
+		background: var(--primary, rgb(245 158 11 / 90%));
+		color: #ffffff;
+		border-color: transparent;
 	}
 
 	.mascot-menu-btn {
@@ -141,10 +201,14 @@ const anchorStyle =
 <script>
 	function initMascot() {
 		const container = document.getElementById("mascot-container");
-		const img = document.getElementById("mascot-img");
+		const img = document.getElementById("mascot-img") as HTMLImageElement | null;
 		const menu = document.getElementById("mascot-menu");
 		const btn = document.getElementById("mascot-menu-btn");
 		const label = document.getElementById("mascot-menu-label");
+		const lockBtn = document.getElementById("mascot-menu-lock");
+		const iconLock = document.getElementById("mascot-menu-icon-lock");
+		const iconUnlock = document.getElementById("mascot-menu-icon-unlock");
+		const refreshBtn = document.getElementById("mascot-menu-refresh");
 		const canvas = document.getElementById("mascot-draw-canvas");
 
 		if (
@@ -153,6 +217,10 @@ const anchorStyle =
 			!menu ||
 			!btn ||
 			!label ||
+			!lockBtn ||
+			!iconLock ||
+			!iconUnlock ||
+			!refreshBtn ||
 			!(canvas instanceof HTMLCanvasElement)
 		) {
 			return;
@@ -160,6 +228,73 @@ const anchorStyle =
 
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
+
+		// 形象列表与随机配置
+		const images = JSON.parse(container.dataset.images || "[]");
+		const randomEnabled = container.dataset.randomEnabled === "true";
+		const randomInterval =
+			parseInt(container.dataset.randomInterval || "60000", 10) || 60000;
+		const targetWidth = parseInt(container.dataset.size || "110", 10);
+		// 以默认形象 naicongqishi（368x429）的展示面积为基准做等比缩放，保持“差不多大”
+		const targetArea = targetWidth * Math.round((targetWidth * 429) / 368);
+
+		let currentIndex = 0;
+		let locked = false;
+		let randomTimer: ReturnType<typeof setInterval> | null = null;
+
+		// 图片等比缩放到目标面积（保持原始比例）
+		const fitImg = () => {
+			const w = img.naturalWidth;
+			const h = img.naturalHeight;
+			if (!w || !h) return;
+			const scale = Math.sqrt(targetArea / (w * h));
+			img.style.width = `${Math.round(w * scale)}px`;
+			img.style.height = `${Math.round(h * scale)}px`;
+		};
+		img.addEventListener("load", fitImg);
+		if (img.complete && img.naturalWidth > 0) fitImg();
+
+		const pickRandomIndex = () => {
+			if (images.length <= 1) return 0;
+			let index;
+			do {
+				index = Math.floor(Math.random() * images.length);
+			} while (index === currentIndex);
+			return index;
+		};
+
+		const setMascot = (index: number) => {
+			currentIndex = index;
+			img.src = images[index];
+		};
+
+		const stopRandomTimer = () => {
+			if (randomTimer) {
+				clearInterval(randomTimer);
+				randomTimer = null;
+			}
+		};
+
+		const startRandomTimer = () => {
+			stopRandomTimer();
+			if (randomEnabled && !locked && images.length > 1) {
+				randomTimer = setInterval(() => {
+					setMascot(pickRandomIndex());
+				}, randomInterval);
+			}
+		};
+
+		const setLocked = (on: boolean) => {
+			locked = on;
+			lockBtn.classList.toggle("mascot-active", on);
+			iconLock.classList.toggle("hidden", on);
+			iconUnlock.classList.toggle("hidden", !on);
+			if (on) {
+				stopRandomTimer();
+			} else {
+				startRandomTimer();
+			}
+		};
 
 		let menuOpen = false;
 		let drawing = false;
@@ -244,6 +379,18 @@ const anchorStyle =
 			menuOpen = false;
 			menu.classList.add("hidden");
 		};
+
+		// 锁定/解锁按钮
+		lockBtn.addEventListener("click", () => {
+			setLocked(!locked);
+			closeMenu();
+		});
+
+		// 刷新按钮：无论锁定与否，手动随机更换形象
+		refreshBtn.addEventListener("click", () => {
+			setMascot(pickRandomIndex());
+			closeMenu();
+		});
 
 		// 菜单按钮：切换画画模式，关掉时清除笔迹
 		btn.addEventListener("click", () => {
@@ -349,6 +496,11 @@ const anchorStyle =
 
 		window.addEventListener("resize", fitCanvas);
 		fitCanvas();
+
+		// 初始化形象索引与随机切换定时器
+		const initialIndex = images.indexOf(img.src);
+		currentIndex = initialIndex >= 0 ? initialIndex : 0;
+		startRandomTimer();
 	}
 
 	initMascot();

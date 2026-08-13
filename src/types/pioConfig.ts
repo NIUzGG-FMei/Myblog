@@ -35,7 +35,8 @@ export type SpineModelConfig = {
 // 静态图片看板娘配置
 export type MascotConfig = {
 	enable: boolean; // 是否启用静态看板娘
-	image: string; // 看板娘图片路径（public 目录下，如 "/pio/naicongqishi.png"）
+	image: string; // 默认看板娘图片路径（public 目录下，如 "/pio/naicongqishi.png"）
+	images?: string[]; // 全部看板娘形象列表（含默认 image），用于锁定/解锁定时切换与刷新
 	size?: number; // 展示宽度（px），默认 110，高度按比例
 	position?: {
 		corner?: "bottom-left" | "bottom-right"; // 初始位置，默认 "bottom-right"
@@ -47,6 +48,10 @@ export type MascotConfig = {
 	menu?: {
 		drawLabel?: string; // 未画画时的菜单文案，默认 "随意画画"
 		clearLabel?: string; // 画画中的菜单文案（点击清除笔迹），默认 "清除笔迹"
+	};
+	random?: {
+		enabled?: boolean; // 是否启用定时随机切换形象，默认 true
+		interval?: number; // 解锁时随机切换间隔（毫秒），默认 60000（一分钟）
 	};
 };
 

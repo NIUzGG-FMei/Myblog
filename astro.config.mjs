@@ -243,6 +243,7 @@ export default defineConfig({
 					"location-on",
 					"location-on-rounded",
 					"lock",
+					"lock-open-rounded",
 					"lock-outline",
 					"menu-rounded",
 					"more-horiz",

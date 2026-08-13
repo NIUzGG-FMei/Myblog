@@ -4,13 +4,26 @@ import type {
 	SpineModelConfig,
 } from "../types/pioConfig";
 
-// 静态图片看板娘配置（奶葱骑士）
+// 静态图片看板娘配置（奶葱骑士 & 其他形象）
 export const mascotConfig: MascotConfig = {
 	// 静态看板娘开关
 	enable: true,
 
-	// 看板娘图片路径（public 目录下）
+	// 默认看板娘图片路径（public 目录下）
 	image: "/pio/naicongqishi.png",
+
+	// 全部看板娘形象列表（含默认 image），用于锁定/解锁定时切换与手动刷新
+	images: [
+		"/pio/naicongqishi.png",
+		"/pio/mascots/binghongchanaiwa.png",
+		"/pio/mascots/chensi.png",
+		"/pio/mascots/daernaidou1.png",
+		"/pio/mascots/daernaidou2.png",
+		"/pio/mascots/kungfunaiwa.png",
+		"/pio/mascots/naimei1.png",
+		"/pio/mascots/naimei2.png",
+		"/pio/mascots/yixiakeshang.png",
+	],
 
 	// 展示宽度（px），高度按图片比例自动计算
 	size: 110,
@@ -38,6 +51,14 @@ export const mascotConfig: MascotConfig = {
 		drawLabel: "随意画画",
 		// 画画中的菜单文案（点击后清除笔迹）
 		clearLabel: "清除笔迹",
+	},
+
+	// 随机形象切换配置
+	random: {
+		// 是否启用定时随机切换形象
+		enabled: true,
+		// 解锁时随机切换间隔（毫秒），默认一分钟
+		interval: 60000,
 	},
 };
 
