@@ -388,28 +388,16 @@ const anchorStyle =
 		// 锁定/解锁按钮
 		lockBtn.addEventListener("click", () => {
 			setLocked(!locked);
-			closeMenu();
 		});
 
 		// 刷新按钮：无论锁定与否，手动随机更换形象
 		refreshBtn.addEventListener("click", () => {
 			setMascot(pickRandomIndex());
-			closeMenu();
 		});
 
 		// 菜单按钮：切换画画模式，关掉时清除笔迹
 		btn.addEventListener("click", () => {
 			setDrawing(!drawing);
-			closeMenu();
-		});
-
-		// 点击菜单以外的区域关闭菜单
-		document.addEventListener("pointerdown", (event) => {
-			if (!menuOpen) return;
-			if (event.target instanceof Node && container.contains(event.target)) {
-				return;
-			}
-			closeMenu();
 		});
 
 		// 涂鸦画布
@@ -461,7 +449,6 @@ const anchorStyle =
 				originY: rect.top,
 				moved: false,
 			};
-			if (menuOpen) closeMenu();
 		});
 
 		img.addEventListener("pointermove", (event) => {
