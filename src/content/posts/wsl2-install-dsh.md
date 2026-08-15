@@ -132,7 +132,13 @@ DSH 的**极简模式下没有联网能力**,而**标准模式经常"雷霆大�
 
 ## 6. 推荐资源
 
-- **推荐插件**:[dsh-routing-suite](https://github.com/yjh051108/dsh-routing-suite)
+- **推荐插件**:
+  - **官方 api**:
+    - **flash 用**:[dsh-routing-suite](https://github.com/yjh051108/dsh-routing-suite)
+    - **pro 用**:[dsh-anchored-standard](https://github.com/xiaobright/dsh-anchored-standard)
+  - **opencode go**:
+    - **flash 用**:[v4-flash-godmode-opencode-go](https://github.com/SheberDavid/v4-flash-godmode-opencode-go)
+    - **pro 用**:[myDshPresets](https://github.com/0liveiraaa/myDshPresets)
 - **Harness 对照分析**:[xiaobright/modeltest — DEEPSEEK_V4_PRO_HARNESS_ANALYSIS](https://github.com/xiaobright/modeltest/blob/main/docs/v4.1/DEEPSEEK_V4_PRO_HARNESS_ANALYSIS_20260814.md)
 - **官方仓库**:[deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 - **官方开发指南**:[docs/development.zh.md](https://github.com/deepseek-ai/DeepSeek-Harness/blob/master/docs/development.zh.md)
