@@ -881,24 +881,34 @@ function disableAnimation() {
     });
   }
 
+  function syncStickyColumnWidth(table: HTMLElement) {
+    const firstCell = table.querySelector(
+      "th:first-child, td:first-child"
+    ) as HTMLElement | null;
+    if (!firstCell) return;
+
+    table.style.setProperty(
+      "--sticky-col-width",
+      `${firstCell.getBoundingClientRect().width}px`
+    );
+  }
+
   function initHorizontalOverflowContainers() {
     const markdownTables = document.querySelectorAll(
-      ".custom-md table:not([data-horizontal-scroll-ready])"
+      ".custom-md table"
     ) as NodeListOf<HTMLElement>;
 
     markdownTables.forEach((table) => {
-      if (table.parentElement?.classList.contains("horizontal-scroll-container")) {
-        table.dataset.horizontalScrollReady = "true";
-        return;
+      if (!table.parentElement?.classList.contains("horizontal-scroll-container")) {
+        const container = document.createElement("div");
+        container.className = "horizontal-scroll-container";
+        table.parentNode?.insertBefore(container, table);
+        container.appendChild(table);
       }
 
-      const container = document.createElement("div");
-      container.className = "horizontal-scroll-container";
-      table.parentNode?.insertBefore(container, table);
-      container.appendChild(table);
       table.dataset.horizontalScrollReady = "true";
+      syncStickyColumnWidth(table);
     });
-
   }
 
   function initContentOverflowEnhancements() {

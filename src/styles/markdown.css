@@ -159,7 +159,7 @@
     border-collapse: separate;
     border-spacing: 0;
     border-radius: calc(var(--radius-large) - 0.5rem);
-    overflow: hidden;
+    overflow: clip;
   }
 
   .horizontal-scroll-container {
@@ -210,6 +210,59 @@ body.wallpaper-transparent .custom-md {
   }
 
   tr:nth-child(even) td {
+    background-color: color-mix(in oklch, var(--btn-plain-bg-active) 68%, transparent);
+  }
+}
+
+/* 横向滚动时固定表格前两列，方便查看右侧数据对应的类别与子集 */
+.custom-md .horizontal-scroll-container > table {
+  th:first-child,
+  td:first-child,
+  th:nth-child(2),
+  td:nth-child(2) {
+    position: sticky;
+    z-index: 1;
+    background-color: var(--card-bg);
+  }
+
+  th:first-child,
+  td:first-child {
+    left: 0;
+    z-index: 2;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    left: var(--sticky-col-width, 0);
+    box-shadow: 4px 0 8px -4px rgb(0 0 0 / 0.15);
+  }
+
+  th:first-child,
+  th:nth-child(2) {
+    background-color: var(--btn-regular-bg);
+  }
+
+  tr:nth-child(even) > td:first-child,
+  tr:nth-child(even) > td:nth-child(2) {
+    background-color: var(--btn-plain-bg-active);
+  }
+}
+
+body.wallpaper-transparent .custom-md .horizontal-scroll-container > table {
+  th:first-child,
+  td:first-child,
+  th:nth-child(2),
+  td:nth-child(2) {
+    background-color: color-mix(in oklch, var(--card-bg-transparent) 92%, transparent);
+  }
+
+  th:first-child,
+  th:nth-child(2) {
+    background-color: color-mix(in oklch, var(--btn-regular-bg) 72%, transparent);
+  }
+
+  tr:nth-child(even) > td:first-child,
+  tr:nth-child(even) > td:nth-child(2) {
     background-color: color-mix(in oklch, var(--btn-plain-bg-active) 68%, transparent);
   }
 }
