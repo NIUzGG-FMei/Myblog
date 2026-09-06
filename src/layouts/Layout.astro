@@ -185,6 +185,13 @@ const siteLang = lang.replace("_", "-");
       ))
     }
 
+    <!-- PWA：支持手机“添加到主屏幕”并显示应用图标 -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content={siteConfig.title} />
+    <meta name="theme-color" content="#6da56d" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1d291d" media="(prefers-color-scheme: dark)" />
+
     <!-- 为特定域名的图片添加 referrerpolicy 以解决 403 问题 -->
     <!-- 注：静态图片（ImageWrapper 组件、Markdown 正文图）已在构建期加好 referrerpolicy；
          此脚本仅作为运行时兜底，处理动态注入的图片（解密内容、第三方评论/统计部件等）。 -->

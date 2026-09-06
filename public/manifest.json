@@ -1,0 +1,30 @@
+{
+	"name": "NiuzG -.-",
+	"short_name": "NiuzG",
+	"description": "Mo-FW-Niuzz 的博客",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#6da56d",
+	"icons": [
+		{
+			"src": "/favicon/app-icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/favicon/app-icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/favicon/app-icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}
