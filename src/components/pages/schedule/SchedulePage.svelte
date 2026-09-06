@@ -1,5 +1,11 @@
 <script lang="ts">
-import type { ScheduleCourse, ScheduleData, TimeMode } from "@/types/schedule";
+import { onMount } from "svelte";
+import type {
+	ScheduleCourse,
+	ScheduleData,
+	ServerSchedule,
+	TimeMode,
+} from "@/types/schedule";
 import {
 	addWeeksToMonday,
 	DAY_COUNT,
@@ -19,61 +25,63 @@ interface Props {
 
 let { defaultSchedule }: Props = $props();
 
-const STORAGE_KEY = "firefly-schedule-imports";
 const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 const MODE_LABELS: Record<TimeMode, string> = {
 	winter: "冬令时",
 	summer: "夏令时",
 };
 
-function isScheduleData(value: unknown): value is ScheduleData {
-	if (!value || typeof value !== "object") return false;
-	const item = value as Record<string, unknown>;
-	return (
-		typeof item.name === "string" &&
-		typeof item.startDate === "string" &&
-		/^\d{4}-\d{2}-\d{2}$/.test(item.startDate) &&
-		Array.isArray(item.courses)
-	);
-}
-
-function loadImported(): ScheduleData[] {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return [];
-		const parsed: unknown = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed.filter(isScheduleData) : [];
-	} catch {
-		return [];
-	}
-}
-
-function saveImported(list: ScheduleData[]) {
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-	} catch {
-		// 忽略存储失败（如隐私模式）
-	}
-}
-
-let imported = $state<ScheduleData[]>(loadImported());
+let imported = $state<ServerSchedule[]>([]);
 let selectedIndex = $state(0);
 let weekOffset = $state(0);
+let serverError = $state("");
 
 let verifyDone = $state(false);
 let passwordModalOpen = $state(false);
 let password = $state("");
 let passwordError = $state("");
 let passwordBusy = $state(false);
+let pendingAction = $state<"import" | "delete">("import");
+let deleteTargetIndex = $state(-1);
 
-	let importModalOpen = $state(false);
-	let importFile = $state<File | null>(null);
-	let importStartDate = $state("");
-	let importPrefix = $state("");
-	let importName = $state("");
-	let importError = $state("");
-	let importBusy = $state(false);
-	let fileInput: HTMLInputElement | undefined = $state();
+let importModalOpen = $state(false);
+let importFile = $state<File | null>(null);
+let importStartDate = $state("");
+let importPrefix = $state("");
+let importName = $state("");
+let importError = $state("");
+let importBusy = $state(false);
+let fileInput: HTMLInputElement | undefined = $state();
+
+onMount(() => {
+	loadSchedules();
+	document.addEventListener("visibilitychange", handleVisibilityChange);
+	return () => {
+		document.removeEventListener("visibilitychange", handleVisibilityChange);
+	};
+});
+
+function handleVisibilityChange() {
+	if (document.visibilityState === "visible") loadSchedules();
+}
+
+async function loadSchedules() {
+	serverError = "";
+	try {
+		const response = await fetch("/api/schedule/list/");
+		const result = (await response.json()) as {
+			schedules?: ServerSchedule[];
+			message?: string;
+		};
+		if (!response.ok || !Array.isArray(result.schedules)) {
+			throw new Error(result.message || "读取失败");
+		}
+		imported = result.schedules;
+	} catch (error) {
+		serverError =
+			error instanceof Error ? error.message : "网络错误，请稍后重试";
+	}
+}
 
 const schedules = $derived([defaultSchedule, ...imported]);
 const schedule = $derived(schedules[selectedIndex] ?? defaultSchedule);
@@ -172,10 +180,20 @@ function openImport() {
 	if (verifyDone) {
 		resetImportForm();
 		importModalOpen = true;
-	} else {
-		password = "";
-		passwordModalOpen = true;
+		return;
 	}
+	password = "";
+	pendingAction = "import";
+	passwordModalOpen = true;
+}
+
+function openDelete() {
+	if (selectedIndex <= 0) return;
+	password = "";
+	passwordError = "";
+	pendingAction = "delete";
+	deleteTargetIndex = selectedIndex;
+	passwordModalOpen = true;
 }
 
 async function submitPassword() {
@@ -192,29 +210,57 @@ async function submitPassword() {
 			ok?: boolean;
 			message?: string;
 		};
-		if (response.ok && result.ok) {
-			verifyDone = true;
-			passwordModalOpen = false;
+		if (!response.ok || !result.ok) {
+			throw new Error(result.message || "密码错误");
+		}
+		verifyDone = true;
+		passwordModalOpen = false;
+		if (pendingAction === "import") {
 			resetImportForm();
 			importModalOpen = true;
 		} else {
-			passwordError = result.message || "密码错误";
+			await performDelete();
 		}
-	} catch {
-		passwordError = "网络错误，请稍后重试";
+	} catch (error) {
+		passwordError =
+			error instanceof Error ? error.message : "网络错误，请稍后重试";
 	} finally {
 		passwordBusy = false;
 	}
 }
 
-	function resetImportForm() {
-		importFile = null;
-		importStartDate = "";
-		importPrefix = "";
-		importName = "";
-		importError = "";
-		if (fileInput) fileInput.value = "";
+async function performDelete() {
+	const target = schedules[deleteTargetIndex];
+	if (!target || !("id" in target)) return;
+	try {
+		const response = await fetch("/api/schedule/delete/", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ password, id: target.id }),
+		});
+		const result = (await response.json()) as {
+			ok?: boolean;
+			message?: string;
+		};
+		if (!response.ok || !result.ok) {
+			throw new Error(result.message || "删除失败");
+		}
+		imported = imported.filter((item) => item.id !== target.id);
+		selectSchedule(0);
+	} catch (error) {
+		passwordError = error instanceof Error ? error.message : "删除失败，请重试";
+		passwordModalOpen = true;
 	}
+}
+
+function resetImportForm() {
+	importFile = null;
+	importStartDate = "";
+	importPrefix = "";
+	importName = "";
+	importError = "";
+	if (fileInput) fileInput.value = "";
+}
 
 async function confirmImport() {
 	if (importBusy) return;
@@ -251,16 +297,28 @@ async function confirmImport() {
 		if (!courses.length) {
 			throw new Error("未解析出任何课程，请确认课表格式与示例一致");
 		}
-			const fileBaseName = file.name.replace(/\.(xls|xlsx)$/i, "");
-			const prefix = importPrefix.trim();
-			const suffix = importName.trim() || fileBaseName;
-			const newSchedule: ScheduleData = {
-				name: prefix ? `${prefix}·${suffix}` : suffix,
-				startDate: importStartDate.trim(),
-				courses,
-			};
-		imported = [...imported, newSchedule];
-		saveImported(imported);
+		const fileBaseName = file.name.replace(/\.(xls|xlsx)$/i, "");
+		const prefix = importPrefix.trim();
+		const suffix = importName.trim() || fileBaseName;
+		const payload = {
+			name: prefix ? `${prefix}·${suffix}` : suffix,
+			startDate: importStartDate.trim(),
+			courses,
+		};
+		const response = await fetch("/api/schedule/save/", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ password, ...payload }),
+		});
+		const result = (await response.json()) as {
+			ok?: boolean;
+			message?: string;
+			schedule?: ServerSchedule;
+		};
+		if (!response.ok || !result.ok || !result.schedule) {
+			throw new Error(result.message || "保存失败");
+		}
+		imported = [...imported, result.schedule];
 		selectSchedule(imported.length);
 		importModalOpen = false;
 	} catch (error) {
@@ -268,16 +326,6 @@ async function confirmImport() {
 	} finally {
 		importBusy = false;
 	}
-}
-
-function deleteSelected() {
-	if (selectedIndex <= 0) return;
-	const target = schedules[selectedIndex];
-	if (!window.confirm(`确定删除课表「${target.name}」吗？`)) return;
-	const importedIndex = selectedIndex - 1;
-	imported = imported.filter((_, index) => index !== importedIndex);
-	saveImported(imported);
-	selectSchedule(0);
 }
 
 function portal(node: HTMLElement) {
@@ -312,7 +360,7 @@ function onPasswordKeydown(event: KeyboardEvent) {
 	{#if selectedIndex > 0}
 		<button
 			class="rounded-lg border border-(--line-divider) px-3 py-1.5 text-sm text-75 hover:text-(--danger-color, #f87171) hover:border-(--danger-color, #f87171) transition-colors cursor-pointer"
-			onclick={deleteSelected}
+			onclick={openDelete}
 		>
 			删除此课表
 		</button>
@@ -325,6 +373,18 @@ function onPasswordKeydown(event: KeyboardEvent) {
 		导入课表
 	</button>
 </div>
+
+{#if serverError}
+	<div class="mb-3 flex items-center gap-2 rounded-lg border border-(--danger-color, #f87171)/40 bg-(--danger-color, #f87171)/10 px-3 py-2 text-xs text-75">
+		<span>无法读取服务器上的课表：{serverError}</span>
+		<button
+			class="shrink-0 rounded-md bg-(--primary) px-2.5 py-1 text-xs text-white transition-opacity hover:opacity-90 cursor-pointer"
+			onclick={loadSchedules}
+		>
+			重试
+		</button>
+	</div>
+{/if}
 
 <div class="flex items-center justify-between gap-3 mb-4">
 	<button
@@ -459,8 +519,16 @@ function onPasswordKeydown(event: KeyboardEvent) {
 			}}
 		>
 			<div class="w-full max-w-sm rounded-(--radius-large) bg-(--card-bg) p-6 shadow-xl">
-				<h3 class="mb-4 text-lg font-bold text-90">管理员验证</h3>
-				<p class="mb-4 text-sm text-75">导入课表需要输入博客管理密码</p>
+				<h3 class="mb-4 text-lg font-bold text-90">
+					{pendingAction === "delete" ? "删除课表验证" : "管理员验证"}
+				</h3>
+				<p class="mb-4 text-sm text-75">
+					{#if pendingAction === "delete"}
+						删除课表「{schedules[deleteTargetIndex]?.name ?? ""}」需要输入管理密码
+					{:else}
+						导入课表需要输入博客管理密码
+					{/if}
+				</p>
 				<input
 					type="password"
 					class="mb-3 w-full rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-2 text-sm text-90 outline-none focus:border-(--primary)"
@@ -503,6 +571,9 @@ function onPasswordKeydown(event: KeyboardEvent) {
 		>
 			<div class="w-full max-w-md rounded-(--radius-large) bg-(--card-bg) p-6 shadow-xl">
 				<h3 class="mb-4 text-lg font-bold text-90">导入课表</h3>
+				<p class="mb-4 text-sm text-75">
+					导入后将保存到服务器，所有访问本博客的人都能看到并查看该课表
+				</p>
 
 				<label class="mb-1 block text-sm text-75">课表文件（xls / xlsx）</label>
 				<input

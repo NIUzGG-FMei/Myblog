@@ -18,5 +18,10 @@ export type ScheduleData = {
 	courses: ScheduleCourse[];
 };
 
+// 保存在服务端（D1）的课表
+export type ServerSchedule = ScheduleData & {
+	id: string;
+};
+
 // 时间排表模式：冬令时 / 夏令时
 export type TimeMode = "winter" | "summer";
