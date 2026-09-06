@@ -77,6 +77,7 @@ declare global {
 		CONTACT_ENCRYPTION_KEY?: string;
 		IP_HASH_SECRET?: string;
 		ADMIN_PASSWORD?: string;
+		SCHEDULE_PASSWORD?: string;
 	}
 }
 

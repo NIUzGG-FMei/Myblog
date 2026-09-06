@@ -1,0 +1,618 @@
+{
+	"name": "mfw·2026-秋季课表",
+	"startDate": "2026-09-07",
+	"courses": [
+		{
+			"name": "【研】人工智能导论",
+			"classroom": "S3402",
+			"weeks": [
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 3,
+			"startLesson": 1,
+			"endLesson": 1
+		},
+		{
+			"name": "【研】人工智能导论",
+			"classroom": "S3402",
+			"weeks": [
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 3,
+			"startLesson": 2,
+			"endLesson": 2
+		},
+		{
+			"name": "【研】人工智能导论",
+			"classroom": "S3402",
+			"weeks": [
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 3,
+			"startLesson": 3,
+			"endLesson": 3
+		},
+		{
+			"name": "【研】人工智能导论",
+			"classroom": "S3402",
+			"weeks": [
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 3,
+			"startLesson": 4,
+			"endLesson": 4
+		},
+		{
+			"name": "【研】应用数理统计",
+			"classroom": "S3201",
+			"weeks": [
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 1,
+			"startLesson": 1,
+			"endLesson": 1
+		},
+		{
+			"name": "【研】应用数理统计",
+			"classroom": "S3201",
+			"weeks": [
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 1,
+			"startLesson": 2,
+			"endLesson": 2
+		},
+		{
+			"name": "【研】应用数理统计",
+			"classroom": "S3201",
+			"weeks": [
+				2,
+				3,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 4,
+			"startLesson": 1,
+			"endLesson": 1
+		},
+		{
+			"name": "【研】应用数理统计",
+			"classroom": "S3201",
+			"weeks": [
+				2,
+				3,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10
+			],
+			"day": 4,
+			"startLesson": 2,
+			"endLesson": 2
+		},
+		{
+			"name": "【研】现代光谱成像技术及应用",
+			"classroom": "理科楼A516",
+			"weeks": [
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			],
+			"day": 6,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】现代光谱成像技术及应用",
+			"classroom": "理科楼A516",
+			"weeks": [
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			],
+			"day": 6,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】现代光谱成像技术及应用",
+			"classroom": "理科楼A516",
+			"weeks": [
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			],
+			"day": 6,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】现代光谱成像技术及应用",
+			"classroom": "理科楼A516",
+			"weeks": [
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			],
+			"day": 6,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				12
+			],
+			"day": 2,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				8
+			],
+			"day": 2,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				9
+			],
+			"day": 2,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				10
+			],
+			"day": 2,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				11
+			],
+			"day": 2,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				12
+			],
+			"day": 2,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				8
+			],
+			"day": 2,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				9
+			],
+			"day": 2,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				10
+			],
+			"day": 2,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				11
+			],
+			"day": 2,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				11
+			],
+			"day": 2,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				8
+			],
+			"day": 2,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				9
+			],
+			"day": 2,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				10
+			],
+			"day": 2,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				11
+			],
+			"day": 2,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				8
+			],
+			"day": 2,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				9
+			],
+			"day": 2,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】马克思主义与当代科技",
+			"classroom": "S3411",
+			"weeks": [
+				10
+			],
+			"day": 2,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				11,
+				12
+			],
+			"day": 5,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				5,
+				6
+			],
+			"day": 5,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				7,
+				8
+			],
+			"day": 5,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				9,
+				10
+			],
+			"day": 5,
+			"startLesson": 5,
+			"endLesson": 5
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				11,
+				12
+			],
+			"day": 5,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				5,
+				6
+			],
+			"day": 5,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				7,
+				8
+			],
+			"day": 5,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				9,
+				10
+			],
+			"day": 5,
+			"startLesson": 6,
+			"endLesson": 6
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				11,
+				12
+			],
+			"day": 5,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				5,
+				6
+			],
+			"day": 5,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				7,
+				8
+			],
+			"day": 5,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				9,
+				10
+			],
+			"day": 5,
+			"startLesson": 7,
+			"endLesson": 7
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				11,
+				12
+			],
+			"day": 5,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				5,
+				6
+			],
+			"day": 5,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				7,
+				8
+			],
+			"day": 5,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】中国式现代化的理论与实践",
+			"classroom": "S3312",
+			"weeks": [
+				9,
+				10
+			],
+			"day": 5,
+			"startLesson": 8,
+			"endLesson": 8
+		},
+		{
+			"name": "【研】行业应用英语",
+			"classroom": "S3215",
+			"weeks": [
+				1,
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9
+			],
+			"day": 2,
+			"startLesson": 3,
+			"endLesson": 3
+		},
+		{
+			"name": "【研】行业应用英语",
+			"classroom": "S3215",
+			"weeks": [
+				1,
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9
+			],
+			"day": 2,
+			"startLesson": 4,
+			"endLesson": 4
+		},
+		{
+			"name": "【研】科技英语翻译",
+			"classroom": "S3411",
+			"weeks": [
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17
+			],
+			"day": 2,
+			"startLesson": 3,
+			"endLesson": 3
+		},
+		{
+			"name": "【研】科技英语翻译",
+			"classroom": "S3411",
+			"weeks": [
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17
+			],
+			"day": 2,
+			"startLesson": 4,
+			"endLesson": 4
+		}
+	]
+}

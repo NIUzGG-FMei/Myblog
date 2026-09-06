@@ -51,6 +51,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		icon: "material-symbols:radar",
 	});
 
+	// 课表
+	links.push({
+		name: "课表",
+		url: "/schedule/",
+		icon: "material-symbols:calendar-month",
+		pageKey: "schedule",
+	});
+
 	// 我的及其子菜单
 	links.push({
 		name: "我的",

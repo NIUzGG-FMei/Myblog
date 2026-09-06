@@ -1,0 +1,32 @@
+---
+import { Icon } from "astro-icon/components";
+import SchedulePage from "@/components/pages/schedule/SchedulePage.svelte";
+import { siteConfig } from "@/config";
+import scheduleData from "@/constants/scheduleData.json";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+
+if (!siteConfig.pages.schedule) {
+	return Astro.redirect("/404/");
+}
+---
+
+<MainGridLayout
+    title="课表"
+    description="按周查看课程安排：课程名与教室，支持导入新的课表文件"
+>
+    <div class="onload-animation">
+        <div class="card-base rounded-(--radius-large) p-6 mb-6">
+            <div class="flex items-center gap-3 mb-5">
+                <Icon is:inline name="material-symbols:calendar-month" class="text-3xl text-(--primary)" />
+                <div>
+                    <h2 class="text-xl font-bold text-90">我的课表</h2>
+                    <p class="text-sm text-75">
+                        默认显示本周（北京时间），可翻页查看其他周次课程
+                    </p>
+                </div>
+            </div>
+
+            <SchedulePage defaultSchedule={scheduleData} client:load />
+        </div>
+    </div>
+</MainGridLayout>

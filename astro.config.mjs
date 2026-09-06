@@ -188,6 +188,7 @@ export default defineConfig({
 					"build-outline",
 					"build-outline-rounded",
 					"calendar-clock-outline",
+					"calendar-month",
 					"calendar-month-outline-rounded",
 					"calendar-month-rounded",
 					"calendar-today",
@@ -482,6 +483,11 @@ export default defineConfig({
 	},
 	vite: {
 		plugins: [tailwindcss()],
+		// xlsx 为旧式 CJS 包且只在导入课表时动态加载，交给浏览器原生 ESM 处理，
+		// 避免 Vite 依赖预构建（optimize deps）缓存失效导致 dev 报错
+		optimizeDeps: {
+			exclude: ["xlsx"],
+		},
 		server: {
 			watch: {
 				ignored: ["**/package/**", "**/Firefly-docs/**"],
