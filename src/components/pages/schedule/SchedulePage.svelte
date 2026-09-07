@@ -23,6 +23,10 @@ interface Props {
 	defaultSchedule: ScheduleData;
 }
 
+type ImportPayload = ScheduleData & {
+	prefix: string;
+};
+
 let { defaultSchedule }: Props = $props();
 
 const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
@@ -51,6 +55,9 @@ let importPrefix = $state("");
 let importName = $state("");
 let importError = $state("");
 let importBusy = $state(false);
+let duplicateScheduleId = $state<string | null>(null);
+let duplicateScheduleName = $state("");
+let pendingImportPayload = $state<ImportPayload | null>(null);
 let fileInput: HTMLInputElement | undefined = $state();
 
 onMount(() => {
@@ -259,11 +266,74 @@ function resetImportForm() {
 	importPrefix = "";
 	importName = "";
 	importError = "";
+	duplicateScheduleId = null;
+	duplicateScheduleName = "";
+	pendingImportPayload = null;
 	if (fileInput) fileInput.value = "";
 }
 
+function clearDuplicateState() {
+	duplicateScheduleId = null;
+	duplicateScheduleName = "";
+	pendingImportPayload = null;
+	importError = "";
+}
+
+async function saveImportPayload(
+	payload: ImportPayload,
+	overwriteId: string | null = null,
+): Promise<void> {
+	const response = await fetch("/api/schedule/save/", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			password,
+			...payload,
+			...(overwriteId ? { overwriteId } : {}),
+		}),
+	});
+	const result = (await response.json()) as {
+		ok?: boolean;
+		duplicate?: boolean;
+		message?: string;
+		existingSchedule?: { id?: string; name?: string };
+		schedule?: ServerSchedule;
+	};
+	if (
+		response.status === 409 &&
+		result.duplicate &&
+		typeof result.existingSchedule?.id === "string"
+	) {
+		duplicateScheduleId = result.existingSchedule.id;
+		duplicateScheduleName = result.existingSchedule.name || payload.name;
+		pendingImportPayload = payload;
+		importError = "";
+		return;
+	}
+	if (!response.ok || !result.ok || !result.schedule) {
+		throw new Error(result.message || "保存失败");
+	}
+
+	const existingIndex = imported.findIndex(
+		(item) => item.id === result.schedule?.id,
+	);
+	if (existingIndex >= 0) {
+		imported = imported.map((item) =>
+			item.id === result.schedule?.id ? result.schedule : item,
+		);
+		selectSchedule(existingIndex + 1);
+	} else {
+		imported = [...imported, result.schedule];
+		selectSchedule(imported.length);
+	}
+	duplicateScheduleId = null;
+	duplicateScheduleName = "";
+	pendingImportPayload = null;
+	importModalOpen = false;
+}
+
 async function confirmImport() {
-	if (importBusy) return;
+	if (importBusy || duplicateScheduleId) return;
 	const file = importFile;
 	if (!file) {
 		importError = "请选择要导入的 xls 课表文件";
@@ -277,6 +347,11 @@ async function confirmImport() {
 	const weekday = date.getUTCDay();
 	if (weekday !== 1) {
 		importError = "该日期不是星期一，请检查后重新填写";
+		return;
+	}
+	const prefix = importPrefix.trim();
+	if (!prefix) {
+		importError = "请填写课表前缀";
 		return;
 	}
 	importBusy = true;
@@ -298,31 +373,29 @@ async function confirmImport() {
 			throw new Error("未解析出任何课程，请确认课表格式与示例一致");
 		}
 		const fileBaseName = file.name.replace(/\.(xls|xlsx)$/i, "");
-		const prefix = importPrefix.trim();
 		const suffix = importName.trim() || fileBaseName;
-		const payload = {
-			name: prefix ? `${prefix}·${suffix}` : suffix,
+		const payload: ImportPayload = {
+			prefix,
+			name: `${prefix}·${suffix}`,
 			startDate: importStartDate.trim(),
 			courses,
 		};
-		const response = await fetch("/api/schedule/save/", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ password, ...payload }),
-		});
-		const result = (await response.json()) as {
-			ok?: boolean;
-			message?: string;
-			schedule?: ServerSchedule;
-		};
-		if (!response.ok || !result.ok || !result.schedule) {
-			throw new Error(result.message || "保存失败");
-		}
-		imported = [...imported, result.schedule];
-		selectSchedule(imported.length);
-		importModalOpen = false;
+		await saveImportPayload(payload);
 	} catch (error) {
 		importError = error instanceof Error ? error.message : "导入失败，请重试";
+	} finally {
+		importBusy = false;
+	}
+}
+
+async function overwriteImport() {
+	if (importBusy || !duplicateScheduleId || !pendingImportPayload) return;
+	importBusy = true;
+	importError = "";
+	try {
+		await saveImportPayload(pendingImportPayload, duplicateScheduleId);
+	} catch (error) {
+		importError = error instanceof Error ? error.message : "覆盖失败，请重试";
 	} finally {
 		importBusy = false;
 	}
@@ -352,7 +425,7 @@ function onPasswordKeydown(event: KeyboardEvent) {
 	>
 		{#each schedules as item, index}
 			<option value={index}>
-				{index === 0 ? "默认课表 · " : "导入课表 · "}{item.name}
+				{item.name}
 			</option>
 		{/each}
 	</select>
@@ -537,7 +610,12 @@ function onPasswordKeydown(event: KeyboardEvent) {
 					onkeydown={onPasswordKeydown}
 				/>
 				{#if passwordError}
-					<p class="mb-3 text-sm text-(--danger-color, #f87171)">{passwordError}</p>
+					<div
+						role="alert"
+						class="mb-3 rounded-lg border border-red-700/40 bg-red-50 px-3 py-2 text-sm font-medium text-red-800 dark:border-red-300/40 dark:bg-red-950/30 dark:text-red-200"
+					>
+						{passwordError}
+					</div>
 				{/if}
 				<div class="flex justify-end gap-2">
 					<button
@@ -584,6 +662,7 @@ function onPasswordKeydown(event: KeyboardEvent) {
 					onchange={(event) => {
 						const input = event.currentTarget as HTMLInputElement;
 						importFile = input.files?.[0] ?? null;
+						clearDuplicateState();
 					}}
 				/>
 
@@ -594,19 +673,22 @@ function onPasswordKeydown(event: KeyboardEvent) {
 					type="date"
 					class="mb-1 w-full rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-2 text-sm text-90 outline-none focus:border-(--primary)"
 					bind:value={importStartDate}
+					oninput={clearDuplicateState}
 				/>
 				<p class="mb-3 text-xs text-75">
 					用于定位周次，例如示例课表为 2026-09-07
 				</p>
 
 				<label class="mb-1 block text-sm text-75">
-					课表前缀（可选，如 mfw）
+					课表前缀（必填，如 mfw）
 				</label>
 				<input
 					type="text"
 					class="mb-1 w-full rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-2 text-sm text-90 outline-none focus:border-(--primary)"
-					placeholder="留空则不添加前缀"
+					placeholder="请输入课表前缀"
+					required
 					bind:value={importPrefix}
+					oninput={clearDuplicateState}
 				/>
 				<p class="mb-3 text-xs text-75">前缀与名称之间会自动用“·”连接</p>
 
@@ -618,10 +700,46 @@ function onPasswordKeydown(event: KeyboardEvent) {
 					class="mb-3 w-full rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-2 text-sm text-90 outline-none focus:border-(--primary)"
 					placeholder="默认使用文件名"
 					bind:value={importName}
+					oninput={clearDuplicateState}
 				/>
 
-				{#if importError}
-					<p class="mb-3 text-sm text-(--danger-color, #f87171)">{importError}</p>
+				{#if duplicateScheduleId}
+					<div
+						role="alert"
+						class="mb-3 rounded-lg border border-amber-700/50 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-300/50 dark:bg-amber-950/30 dark:text-amber-100"
+					>
+						<p class="font-medium">
+							课表名称「{duplicateScheduleName}」与现有课表重复。
+						</p>
+						<p class="mt-1">可以返回修改前缀或名称，也可以覆盖现有课表。</p>
+						{#if importError}
+							<p class="mt-2 font-medium text-red-800 dark:text-red-200">
+								{importError}
+							</p>
+						{/if}
+						<div class="mt-3 flex flex-wrap justify-end gap-2">
+							<button
+								class="rounded-lg border border-amber-700/50 px-3 py-1.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-300/50 dark:text-amber-100 dark:hover:bg-amber-900/40 cursor-pointer"
+								onclick={clearDuplicateState}
+							>
+								返回修改前缀或者名称
+							</button>
+							<button
+								class="rounded-lg bg-(--primary) px-3.5 py-1.5 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
+								onclick={overwriteImport}
+								disabled={importBusy}
+							>
+								{importBusy ? "覆盖中…" : "覆盖"}
+							</button>
+						</div>
+					</div>
+				{:else if importError}
+					<div
+						role="alert"
+						class="mb-3 rounded-lg border border-red-700/40 bg-red-50 px-3 py-2 text-sm font-medium text-red-800 dark:border-red-300/40 dark:bg-red-950/30 dark:text-red-200"
+					>
+						{importError}
+					</div>
 				{/if}
 
 				<div class="flex justify-end gap-2">
@@ -634,7 +752,7 @@ function onPasswordKeydown(event: KeyboardEvent) {
 					<button
 						class="rounded-lg bg-(--primary) px-4 py-1.5 text-sm text-white transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-60"
 						onclick={confirmImport}
-						disabled={importBusy}
+						disabled={importBusy || !!duplicateScheduleId}
 					>
 						{importBusy ? "解析中…" : "导入"}
 					</button>
