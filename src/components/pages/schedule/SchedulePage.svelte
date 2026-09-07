@@ -37,6 +37,7 @@ const MODE_LABELS: Record<TimeMode, string> = {
 
 let imported = $state<ServerSchedule[]>([]);
 let selectedIndex = $state(0);
+let scheduleSearch = $state("");
 let weekOffset = $state(0);
 let serverError = $state("");
 
@@ -92,6 +93,27 @@ async function loadSchedules() {
 
 const schedules = $derived([defaultSchedule, ...imported]);
 const schedule = $derived(schedules[selectedIndex] ?? defaultSchedule);
+const matchingSchedules = $derived.by(() => {
+	const query = scheduleSearch.trim().toLocaleLowerCase();
+	return schedules
+		.map((item, index) => ({ item, index, isCurrent: false }))
+		.filter(
+			({ item }) => !query || item.name.toLocaleLowerCase().includes(query),
+		);
+});
+const filteredSchedules = $derived.by(() => {
+	if (!scheduleSearch.trim()) return matchingSchedules;
+	if (matchingSchedules.some(({ index }) => index === selectedIndex)) {
+		return matchingSchedules;
+	}
+	const current = schedules[selectedIndex];
+	return current
+		? [
+				{ item: current, index: selectedIndex, isCurrent: true },
+				...matchingSchedules,
+			]
+		: matchingSchedules;
+});
 const startDate = $derived(parseDateOnly(schedule.startDate));
 const today = getBeijingToday();
 const todayDayIndex = $derived.by(() => {
@@ -180,6 +202,10 @@ const jumpWeek = $derived.by(() => {
 function selectSchedule(index: number) {
 	selectedIndex = index;
 	weekOffset = 0;
+}
+
+function handleScheduleSearch(event: Event) {
+	scheduleSearch = (event.currentTarget as HTMLInputElement).value;
 }
 
 function openImport() {
@@ -415,20 +441,48 @@ function onPasswordKeydown(event: KeyboardEvent) {
 }
 </script>
 
-<div class="flex flex-wrap items-center gap-2 mb-4">
+<div class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+	<div class="relative min-w-0 flex-1 basis-full sm:basis-auto">
+		<svg
+			class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-50"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			aria-hidden="true"
+		>
+			<circle cx="11" cy="11" r="7" />
+			<path stroke-linecap="round" d="m20 20-4-4" />
+		</svg>
+		<input
+			type="search"
+			class="w-full rounded-lg border border-(--line-divider) bg-(--card-bg) py-1.5 pl-9 pr-3 text-sm text-90 outline-none transition-colors placeholder:text-50 focus:border-(--primary)"
+			placeholder="搜索课表名称"
+			aria-label="搜索课表名称"
+			value={scheduleSearch}
+			oninput={handleScheduleSearch}
+		/>
+	</div>
+
 	<select
-		class="rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-1.5 text-sm text-90 outline-none cursor-pointer"
+		class="w-full rounded-lg border border-(--line-divider) bg-(--card-bg) px-3 py-1.5 text-sm text-90 outline-none cursor-pointer sm:w-auto sm:min-w-48"
 		value={selectedIndex}
 		onchange={(event) =>
 			selectSchedule(Number((event.currentTarget as HTMLSelectElement).value))}
 		aria-label="选择课表"
 	>
-		{#each schedules as item, index}
-			<option value={index}>
-				{item.name}
+		{#each filteredSchedules as option}
+			<option value={option.index}>
+				{option.isCurrent ? `当前课表：${option.item.name}` : option.item.name}
 			</option>
 		{/each}
 	</select>
+
+	{#if scheduleSearch.trim()}
+		<span class="px-1 text-xs text-50 whitespace-nowrap">
+			{matchingSchedules.length} / {schedules.length} 个结果
+		</span>
+	{/if}
 
 	{#if selectedIndex > 0}
 		<button
@@ -440,12 +494,18 @@ function onPasswordKeydown(event: KeyboardEvent) {
 	{/if}
 
 	<button
-		class="ml-auto rounded-lg bg-(--primary) px-3.5 py-1.5 text-sm text-white transition-opacity hover:opacity-90 cursor-pointer"
+		class="rounded-lg bg-(--primary) px-3.5 py-1.5 text-sm text-white transition-opacity hover:opacity-90 cursor-pointer sm:ml-auto"
 		onclick={openImport}
 	>
 		导入课表
 	</button>
 </div>
+
+{#if scheduleSearch.trim() && matchingSchedules.length === 0}
+	<div class="mb-3 rounded-lg border border-dashed border-(--line-divider) px-3 py-2 text-sm text-75">
+		未找到包含“{scheduleSearch.trim()}”的课表，请尝试其他关键字。
+	</div>
+{/if}
 
 {#if serverError}
 	<div class="mb-3 flex items-center gap-2 rounded-lg border border-(--danger-color, #f87171)/40 bg-(--danger-color, #f87171)/10 px-3 py-2 text-xs text-75">
