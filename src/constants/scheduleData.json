@@ -55,6 +55,40 @@
 			"endLesson": 4
 		},
 		{
+			"name": "【研】工程伦理",
+			"classroom": "S3T22",
+			"weeks": [
+				1,
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9
+			],
+			"day": 1,
+			"startLesson": 3,
+			"endLesson": 3
+		},
+		{
+			"name": "【研】工程伦理",
+			"classroom": "S3T22",
+			"weeks": [
+				1,
+				2,
+				3,
+				4,
+				6,
+				7,
+				8,
+				9
+			],
+			"day": 1,
+			"startLesson": 4,
+			"endLesson": 4
+		},
+		{
 			"name": "【研】应用数理统计",
 			"classroom": "S3201",
 			"weeks": [
