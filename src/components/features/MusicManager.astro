@@ -147,7 +147,7 @@ const managerConfigStr = JSON.stringify({
                     .replace(':r', Math.random());
                 if (m.auth) fetchUrl += '&auth=' + m.auth;
 
-                var res = await fetch(fetchUrl);
+                var res = await fetch(fetchUrl, { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 var data = await res.json();
 
