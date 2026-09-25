@@ -2,7 +2,7 @@
 title: "桌面养了一只“奶包”：naibao 桌面宠物"
 published: 2026-08-18
 description: "介绍我的 Windows 桌面宠物 naibao：置顶悬浮、网页跳转、截图、北京时间整点报时，附安装包与源码下载。"
-image: ./images/naibao/naibao.png
+image: https://img.2298321.xyz/images/e3fac74ee67301d2fade56245b20052881273b2f1076230a1eeb4ca54bb92002.webp
 tags: [WPF, C#, .NET, Windows, 桌面宠物]
 category: 开发工具
 draft: false

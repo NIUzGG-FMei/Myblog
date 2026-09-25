@@ -4,7 +4,7 @@ published: 2026-08-09
 description: "从集合预测、Object Queries 和匈牙利匹配出发，梳理 DETR 的网络结构、损失函数、推理流程与实验结论。"
 tags: [DETR, 目标检测, Transformer, 计算机视觉]
 category: 深度学习
-image: ./images/detr/detr-overview.png
+image: https://img.2298321.xyz/images/fb86737cdd993c0a44c4a3a018d60b46988f7c6daa41ec6195a51b03ec708cb3.webp
 draft: false
 slug: detr
 sourceLink: "https://arxiv.org/abs/2005.12872"
@@ -50,11 +50,11 @@ DETR 的主流程可以概括为：
   -> 固定数量的预测结果
 ```
 
-![DETR 整体流程](./images/detr/detr-overview.png)
+![DETR 整体流程](https://img.2298321.xyz/images/fb86737cdd993c0a44c4a3a018d60b46988f7c6daa41ec6195a51b03ec708cb3.webp)
 
 > 图 1：DETR 直接输出最终检测集合，并在训练阶段通过二分图匹配建立预测结果与真实框之间的唯一对应关系。图源：Carion et al., *End-to-End Object Detection with Transformers*, 2020。
 
-![DETR 网络结构](./images/detr/detr-architecture.png)
+![DETR 网络结构](https://img.2298321.xyz/images/fefb02e6f18019844db116262c78899f06f3bab56948458c8d383e787c48b32d.webp)
 
 > 图 2：DETR 的 Backbone、Encoder、Decoder、Object Queries 和预测头。图源：Carion et al., 2020。
 
@@ -306,7 +306,7 @@ boxes = bbox_head(hs).sigmoid()               # [N, B, 4]
 
 下面的结果来自 DETR 论文中的对比表。`GFLOPs/FPS` 是在论文实验环境下报告的组合指标，不能脱离硬件和推理配置单独比较。
 
-![DETR 实验结果](./images/detr/benchmark-table.png)
+![DETR 实验结果](https://img.2298321.xyz/images/c9648016041f8ad92f4f8b6ba50df8652d2427ee9e03dedc5e0fe4db7e9c9374.webp)
 
 > 图 3：DETR 论文中的 COCO val 结果。图源：Carion et al., 2020。
 
@@ -333,7 +333,7 @@ boxes = bbox_head(hs).sigmoid()               # [N, B, 4]
 
 ### 8.1 Encoder 的全局建模
 
-![Encoder 注意力可视化](./images/detr/encoder-attention.png)
+![Encoder 注意力可视化](https://img.2298321.xyz/images/30c62ae153a43fcd90bcd5d927ec83b6720c3e561d78a95cf1a20c13268f3df9.webp)
 
 > 图 4：Encoder 对参考点的自注意力可视化。它展示了特征之间可以建立跨空间位置的联系，但不应简单理解为 Encoder 已经完成了实例级检测。图源：Carion et al., 2020。
 
@@ -341,7 +341,7 @@ Encoder 的自注意力让特征能够聚合全局上下文。例如，一个局
 
 ### 8.2 Decoder 的目标相关注意力
 
-![Decoder 注意力可视化](./images/detr/decoder-attention.png)
+![Decoder 注意力可视化](https://img.2298321.xyz/images/8faea4b2277a428fc2d4f3cb95400b8e407f5f4a0fbd45e2aad49442aa97091f.webp)
 
 > 图 5：Decoder 对不同预测对象的注意力可视化。不同颜色表示不同预测结果的注意力区域。图源：Carion et al., 2020。
 
@@ -349,7 +349,7 @@ Decoder 的 Query 会通过交叉注意力从 Encoder 特征中提取与当前�
 
 ### 8.3 Object Query 的特化
 
-![Object Query 槽位可视化](./images/detr/object-query-slots.png)
+![Object Query 槽位可视化](https://img.2298321.xyz/images/afba7f0901f0ae65e62c3cade8097c9c9ff4f81c25b68c91b18540029b0bb3bf.webp)
 
 > 图 6：100 个预测槽位中部分 Query 的中心位置和框尺度可视化。不同颜色表示不同的框尺度和方向。图源：Carion et al., 2020。
 

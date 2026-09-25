@@ -2,7 +2,7 @@
 title: "细长和小目标的优化（一）：数据预处理方面"
 published: 2026-08-13
 description: "针对高光谱/多光谱 OBB 检测任务里的细长目标和小目标，聊聊 P2 检测头、tile 切片、截断目标处理等数据预处理方面的坑与选择。"
-image: ./images/obb-slender-small-objects/fig1-fn-truck.png
+image: https://img.2298321.xyz/images/43b3ca87c4e17cba483504d6b0136b819607d839d38b3331b0ecf19ba79f1c00.webp
 tags: [OBB, 目标检测, 小目标检测, YOLO, 多光谱, 数据预处理]
 category: 深度学习
 draft: false
@@ -76,13 +76,13 @@ slug: obb-slender-small-objects
 - **直接丢弃（不再标注）**：模型会把这部分真实目标的特征当作背景来学习，可能漏检，即 FN 升高，如图 1；
 - **当作完整正样本参与训练**：模型会把不完整的目标特征当成完整目标来学，可能出现 FP 升高（背景误检成目标）、把大目标的一部分当完整目标框出来，甚至把特征相似的其他目标误检成这个类，如图 2、3、4。
 
-![图 1：Truck 漏检，图中的框是 GT 框](./images/obb-slender-small-objects/fig1-fn-truck.png)
+![图 1：Truck 漏检，图中的框是 GT 框](https://img.2298321.xyz/images/43b3ca87c4e17cba483504d6b0136b819607d839d38b3331b0ecf19ba79f1c00.webp)
 
-![图 2：把长得像 Truck 车头的背景误检成 Truck](./images/obb-slender-small-objects/fig2-fp-background-truck.png)
+![图 2：把长得像 Truck 车头的背景误检成 Truck](https://img.2298321.xyz/images/01ce15a8765c8ea4fc8c22d285ffd69c6fdb4a775275fb4bbd9f647899813014.webp)
 
-![图 3：把大目标 Truck 的一部分当成完整目标检出](./images/obb-slender-small-objects/fig3-fp-partial-truck.png)
+![图 3：把大目标 Truck 的一部分当成完整目标检出](https://img.2298321.xyz/images/d3b605e7c80fdff74f871161f2c97e7d3a3ba0cb798e71777f582c02fe97d534.webp)
 
-![图 4：把特征相似的其他目标误检成 Truck](./images/obb-slender-small-objects/fig4-fp-similar-object.png)
+![图 4：把特征相似的其他目标误检成 Truck](https://img.2298321.xyz/images/fc2a3f4ed73676dd87cc7e71f1a77322a4400bbceda646dca1504f5dee73049b.webp)
 
 （3）另外，用切片后的 patch 训练，模型能看到的上下文信息变少了。而且：
 
@@ -95,11 +95,11 @@ slug: obb-slender-small-objects
 
 所以对于越界目标，只能设置一个较高的 IoF 阈值：小于阈值的直接舍弃、不标注；大于阈值的用 minAreaRect 重建成标准旋转矩形。重建后矩形的四个顶点不一定都在 patch 内，还需要 clip_points_to_bounds 做顶点钳制，把四个顶点强行拉回图内。但钳制可能产生不规则的四边形，这种框已经不适合做 OBB 训练了，我的建议是直接舍弃。相关可视化见图 5、6、7。
 
-![图 5：某 256×256 大小的 patch 切片](./images/obb-slender-small-objects/fig5-patch-256.png)
+![图 5：某 256×256 大小的 patch 切片](https://img.2298321.xyz/images/1f79acb318cdb4019b35e366773404b070a295ea0e51e2fcad173aebfae0d068.webp)
 
-![图 6：矩形重建后仍有一个角出界](./images/obb-slender-small-objects/fig6-rect-out-of-bounds.png)
+![图 6：矩形重建后仍有一个角出界](https://img.2298321.xyz/images/4d22d98ef555b7dd798decbc39ea2e71400bae049d0f1280a40158f4da71de95.webp)
 
-![图 7：顶点钳制后的 GT 框，已经不适合训练 OBB 任务了](./images/obb-slender-small-objects/fig7-clipped-gt-box.png)
+![图 7：顶点钳制后的 GT 框，已经不适合训练 OBB 任务了](https://img.2298321.xyz/images/78fe74579d8afa01293a91367b373b781efa41acd3d01d18e2e8efbe7948ccdb.webp)
 
 ## 总结
 

@@ -1,0 +1,94 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, mkdir, cp, writeFile, readFile, readdir, rm, symlink, access } from "node:fs/promises";
+import { dirname, resolve, delimiter } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
+import sharp from "sharp";
+import { assertNoLoss } from "./image-host.mjs";
+
+const home = dirname(fileURLToPath(import.meta.url));
+const hash = "a".repeat(64), asset = { path: `images/${hash}.webp`, sha256: hash };
+test("发布基线：允许新增，拒绝删除、修改和损坏基线", () => {
+	const previous = { version: 1, assets: [asset] };
+	assert.doesNotThrow(() => assertNoLoss(previous, [asset, { path: "new", sha256: "new" }]));
+	assert.throws(() => assertNoLoss(previous, []), /误删保护/);
+	assert.throws(() => assertNoLoss(previous, [{ ...asset, sha256: "b".repeat(64) }]), /误删保护/);
+	assert.throws(() => assertNoLoss({ version: 2, assets: [] }, []), /基线无效/);
+});
+
+test("本地端到端：预览、导入、清单、备份与发布保护（部署器为本地桩）", async () => {
+	const tmp = await mkdtemp(resolve(home, ".test-"));
+	try {
+		const project = resolve(tmp, "project"), app = resolve(project, "image-host"), source = resolve(project, "source");
+		await mkdir(resolve(app, "public"), { recursive: true });
+		await mkdir(resolve(source, "nested"), { recursive: true });
+		await mkdir(resolve(project, "bin"));
+		await cp(resolve(home, "image-host.mjs"), resolve(app, "image-host.mjs"));
+		await cp(resolve(home, "wrangler.jsonc"), resolve(app, "wrangler.jsonc"));
+		for (const name of ["_headers", "robots.txt"]) await cp(resolve(home, "public", name), resolve(app, "public", name));
+		await sharp({ create: { width: 32, height: 24, channels: 3, background: "white" } }).png().toFile(resolve(source, "图表.png"));
+		await cp(resolve(source, "图表.png"), resolve(source, "nested", "duplicate.png"));
+		await writeFile(resolve(source, "readme.txt"), "skip this");
+		await writeFile(resolve(source, "broken.png"), "not an image");
+		const stub = resolve(project, "bin", "pnpm");
+		await writeFile(stub, "#!/bin/sh\n[ \"$CI\" = true ] && [ \"$WRANGLER_HIDE_BANNER\" = true ] && [ \"$WRANGLER_SEND_METRICS\" = false ] || exit 9\ncase \" $* \" in *\" --dry-run \"*) exit 0;; esac\nprintf called >> stub-called.txt\nexit 0\n", { mode: 0o700 });
+		const run = (args, ok = true) => {
+			const result = spawnSync(process.execPath, [resolve(app, "image-host.mjs"), ...args], { cwd: project, encoding: "utf8", env: { ...process.env, PATH: `${resolve(project, "bin")}${delimiter}${process.env.PATH}` } });
+			assert.equal(result.status === 0, ok, result.stdout + result.stderr);
+			return result.stdout + result.stderr;
+		};
+		assert.match(run(["batch", "source", "--lossless"]), /2 张可处理，2 个跳过/);
+		await assert.rejects(access(resolve(app, "manifest.json")));
+		assert.deepEqual((await readdir(resolve(app, "public"))).sort(), ["_headers", "robots.txt"]);
+		run(["batch", "source", "--lossless", "--confirm-import"]);
+		let state = JSON.parse(await readFile(resolve(app, "manifest.json"), "utf8"));
+		assert.equal(Object.keys(state.assets).length, 1);
+		const entry = Object.values(state.assets)[0];
+		assert.equal(entry.sources.length, 2);
+		assert.equal(entry.width, 32);
+		run(["add", "source/图表.png", "--lossless"]);
+		state = JSON.parse(await readFile(resolve(app, "manifest.json"), "utf8"));
+		assert.equal(Object.values(state.assets)[0].sources.length, 2);
+		run(["links", "https://example.com"]);
+		assert.match(await readFile(resolve(app, "links.md"), "utf8"), /originalBytes|原图/);
+		run(["links", "http://example.com"], false);
+		run(["add", "/etc/passwd"], false);
+		run(["add", "source/图表.png", "--unknown"], false);
+		await symlink(resolve(source, "图表.png"), resolve(source, "symlink.png"));
+		run(["batch", "source"], false);
+		await rm(resolve(source, "symlink.png"));
+		run(["backup"]);
+		const backups = await readdir(resolve(app, ".backups"));
+		assert.equal(backups.length, 1);
+		assert.deepEqual(await readFile(resolve(app, ".backups", backups[0], "public", entry.path)), await readFile(resolve(app, "public", entry.path)));
+		run(["publish-check"], false);
+		run(["publish-check", "--first-deploy"]);
+		run(["dry-run"]);
+		await assert.rejects(access(resolve(app, "published.json")));
+		await assert.rejects(access(resolve(app, "publish-pending.json")));
+		run(["publish", "https://example.com", "--first-deploy"], false);
+		await assert.rejects(access(resolve(project, "stub-called.txt")));
+		// Only this local shell stub can be invoked; no real Wrangler or network.
+		run(["publish", "https://example.com", "--first-deploy", "--confirm-deploy"]);
+		assert.equal(await readFile(resolve(project, "stub-called.txt"), "utf8"), "called");
+		assert.equal(JSON.parse(await readFile(resolve(app, "published.json"), "utf8")).assets.length, 1);
+		const image = await readFile(resolve(app, "public", entry.path));
+		await rm(resolve(app, "public", entry.path));
+		run(["check"], false);
+		run(["publish-check", "--first-deploy"], false);
+		run(["publish", "https://example.com", "--confirm-deploy"], false);
+		assert.equal(await readFile(resolve(project, "stub-called.txt"), "utf8"), "called");
+		await writeFile(resolve(app, "public", entry.path), image);
+		run(["publish-check"]);
+		await writeFile(resolve(app, "public", "secret.txt"), "reject");
+		run(["check"], false);
+		await rm(resolve(app, "public", "secret.txt"));
+		await writeFile(stub, "#!/bin/sh\nexit 1\n", { mode: 0o700 });
+		run(["publish", "https://example.com", "--confirm-deploy"], false);
+		await access(resolve(app, "publish-pending.json"));
+		assert.match(run(["publish-check"], false), /未决部署/);
+		await mkdir(resolve(app, ".operation-lock"));
+		assert.match(run(["check"], false), /操作锁存在/);
+	} finally { await rm(tmp, { recursive: true, force: true }); }
+});
