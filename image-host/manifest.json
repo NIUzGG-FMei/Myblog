@@ -210,6 +210,21 @@
           "mode": "lossless"
         }
       ]
+    },
+    "images/d4889707079ad18855483a6167bd6e4dada1407bc441f827aea6df417c5a270a.webp": {
+      "path": "images/d4889707079ad18855483a6167bd6e4dada1407bc441f827aea6df417c5a270a.webp",
+      "sha256": "d4889707079ad18855483a6167bd6e4dada1407bc441f827aea6df417c5a270a",
+      "bytes": 120252,
+      "width": 1167,
+      "height": 880,
+      "sources": [
+        {
+          "path": "src/content/posts/images/pretrained-weights/pretrained-weights-loading.jpg",
+          "originalBytes": 1116112,
+          "originalSha256": "117f7beba5adf550938fe7342cd25e7a3705c251e7d4ba22e6f80abce0f63787",
+          "mode": "quality85-max2400"
+        }
+      ]
     }
   }
 }
