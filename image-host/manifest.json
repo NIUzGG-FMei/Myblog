@@ -225,6 +225,21 @@
           "mode": "quality85-max2400"
         }
       ]
+    },
+    "images/e6a644be00ac834a4b023e6be81b2f9d23b2d0967af1c0b335b8a38c7411fc33.webp": {
+      "path": "images/e6a644be00ac834a4b023e6be81b2f9d23b2d0967af1c0b335b8a38c7411fc33.webp",
+      "sha256": "e6a644be00ac834a4b023e6be81b2f9d23b2d0967af1c0b335b8a38c7411fc33",
+      "bytes": 134670,
+      "width": 3200,
+      "height": 1920,
+      "sources": [
+        {
+          "path": "src/content/posts/images/weicode-mcp-bridge/weicode-route.png",
+          "originalBytes": 178652,
+          "originalSha256": "f6de57cf476048ed359daf3fc542cdad92c0749770d7043528b26bc67d40b037",
+          "mode": "lossless"
+        }
+      ]
     }
   }
 }

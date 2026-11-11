@@ -1,7 +1,7 @@
 {
   "version": 1,
   "worker": "mfwblog-images",
-  "deployedAt": "2026-10-29T16:38:53.368Z",
+  "deployedAt": "2026-11-11T17:19:00.467Z",
   "assets": [
     {
       "path": "images/01ce15a8765c8ea4fc8c22d285ffd69c6fdb4a775275fb4bbd9f647899813014.webp",
@@ -86,6 +86,13 @@
       "bytes": 227508,
       "width": 1024,
       "height": 1024
+    },
+    {
+      "path": "images/e6a644be00ac834a4b023e6be81b2f9d23b2d0967af1c0b335b8a38c7411fc33.webp",
+      "sha256": "e6a644be00ac834a4b023e6be81b2f9d23b2d0967af1c0b335b8a38c7411fc33",
+      "bytes": 134670,
+      "width": 3200,
+      "height": 1920
     },
     {
       "path": "images/fb86737cdd993c0a44c4a3a018d60b46988f7c6daa41ec6195a51b03ec708cb3.webp",
