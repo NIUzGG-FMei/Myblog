@@ -240,6 +240,21 @@
           "mode": "lossless"
         }
       ]
+    },
+    "images/1a205bc5d4ef8a1b3e15d53c66c7356602f0df928899a0ef0a5b65d57359959a.webp": {
+      "path": "images/1a205bc5d4ef8a1b3e15d53c66c7356602f0df928899a0ef0a5b65d57359959a.webp",
+      "sha256": "1a205bc5d4ef8a1b3e15d53c66c7356602f0df928899a0ef0a5b65d57359959a",
+      "bytes": 108080,
+      "width": 1680,
+      "height": 1210,
+      "sources": [
+        {
+          "path": "src/content/posts/images/mse-microlesson-helper/route.png",
+          "originalBytes": 133670,
+          "originalSha256": "e727e5d25689c2eb438ee3bbcdff64932a4e4c018959212269d800b2877d4725",
+          "mode": "lossless"
+        }
+      ]
     }
   }
 }
